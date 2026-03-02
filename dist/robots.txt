@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://phenomenal-unicorn-c76a3e.netlify.app/sitemap.xml
