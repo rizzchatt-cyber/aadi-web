@@ -1,0 +1,191 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Playfair Display", serif;
+  --font-sans: "Poppins", sans-serif;
+
+  --color-luxury-white: #ffffff;
+  --color-luxury-cream: #f8f6f2;
+  --color-charcoal: #222222;
+  --color-gold: #d4af37;
+  --color-gold-light: #f5d76e;
+}
+
+@layer base {
+  html {
+    scroll-padding-top: 80px;
+    /* Smooth scrolling — hardware accelerated on modern browsers */
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* iOS Safari: prevent input zoom, smooth scroll, momentum */
+  @supports (-webkit-touch-callout: none) {
+    html {
+      -webkit-overflow-scrolling: touch;
+    }
+    input,
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  body {
+    @apply bg-luxury-white text-charcoal font-sans selection:bg-gold selection:text-luxury-white;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    /* Only show dot grid on desktop — mobile gets plain white */
+    background-image: radial-gradient(circle at 2px 2px, rgba(191, 149, 63, 0.05) 1px, transparent 0);
+    background-size: 40px 40px;
+    /* Prevent overflow-x flicker on mobile */
+    overflow-x: hidden;
+  }
+
+  @media (max-width: 768px) {
+    body {
+      background-image: none;
+      background-color: var(--color-luxury-white);
+    }
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-charcoal;
+  }
+
+  /* Reduce motion for accessibility + battery on prefer-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Native img optimization */
+  img {
+    max-width: 100%;
+    height: auto;
+    image-rendering: auto;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-luxury-white/80 border-b border-gold/10 shadow-sm;
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  @media (max-width: 768px) {
+    /* Remove backdrop-filter on mobile — massive perf drain */
+    .glass {
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+      @apply bg-luxury-white border-b border-gold/10 shadow-sm;
+    }
+  }
+
+  /* GPU layer promotion — only use on elements that truly animate */
+  .transform-gpu {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  /* Product cards — promote to own layer only during hover/animation */
+  .product-card {
+    isolation: isolate;
+  }
+  .product-card:hover {
+    will-change: transform;
+  }
+
+  .gold-gradient {
+    @apply bg-linear-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728];
+  }
+
+  .gold-text-gradient {
+    @apply bg-linear-to-r from-[#bf953f] via-[#fcf6ba] to-[#b38728] bg-clip-text text-transparent;
+  }
+
+  .shadow-premium {
+    box-shadow: 0 10px 30px rgba(34, 34, 34, 0.03);
+  }
+
+  .shadow-luxury {
+    box-shadow: 0 20px 40px -10px rgba(191, 149, 63, 0.15);
+  }
+
+  .border-luxury {
+    @apply border border-gold/10 hover:border-gold/25 transition-all duration-700;
+  }
+
+  .tracking-luxury {
+    @apply tracking-[0.15em] md:tracking-[0.25em];
+  }
+
+  /* Shimmer for button highlights */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      to bottom right,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,0) 40%,
+      rgba(255,255,255,0.4) 50%,
+      rgba(255,255,255,0) 60%,
+      rgba(255,255,255,0) 100%
+    );
+    transform: rotate(45deg);
+    animation: shimmer-sweep 4s infinite linear;
+  }
+  @keyframes shimmer-sweep {
+    0%   { transform: translateX(-150%) rotate(45deg); }
+    100% { transform: translateX(150%) rotate(45deg); }
+  }
+
+  /* Image skeleton shimmer — used by DriveImage loading state */
+  @keyframes shimmer-slide {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      #f5efe0 0%,
+      #ede0c4 38%,
+      #fdf8ef 50%,
+      #ede0c4 62%,
+      #f5efe0 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer-slide 1.6s ease-in-out infinite;
+  }
+
+  /* Off-screen product cards — let browser skip paint/layout */
+  @supports (content-visibility: auto) {
+    .product-card {
+      content-visibility: auto;
+      contain-intrinsic-size: 0 400px;
+    }
+  }
+
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
