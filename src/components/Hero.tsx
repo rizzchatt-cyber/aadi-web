@@ -22,14 +22,14 @@ export default function Hero({ tagline, bgBanners }: { tagline?: string; image?:
   const navigate = useNavigate();
   const [prices, setPrices] = useState({
     gold24k: 144930,
-    silver: 2223
+    silver: 222300
   });
 
   useEffect(() => {
     const interval = setInterval(() => {
       setPrices(prev => ({
         gold24k: prev.gold24k + (Math.random() > 0.5 ? 12 : -12) * Math.random(),
-        silver: prev.silver + (Math.random() > 0.5 ? 0.3 : -0.3) * Math.random()
+        silver: prev.silver + (Math.random() > 0.5 ? 30 : -30) * Math.random()
       }));
     }, 4000);
     return () => clearInterval(interval);
@@ -179,7 +179,7 @@ export default function Hero({ tagline, bgBanners }: { tagline?: string; image?:
                   </div>
                   <h4 className="text-lg font-mono font-black text-charcoal leading-none mt-1 tabular-nums">
                     ₹{prices.silver.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                    <span className="text-[10px] font-serif font-normal text-charcoal/40 ml-1">/ 10g</span>
+                    <span className="text-[10px] font-serif font-normal text-charcoal/40 ml-1">/ 1 kg</span>
                   </h4>
                   <p className="text-[9px] font-mono font-bold text-emerald-600 mt-1 tabular-nums">
                     ₹{silverTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-charcoal/40 font-serif font-normal">(inc. 3% GST)</span>
