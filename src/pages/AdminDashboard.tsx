@@ -28,6 +28,7 @@ import {
     Coins
 } from 'lucide-react';
 import { db, auth } from '../firebase/config';
+
 import {
     collection,
     addDoc,
@@ -91,6 +92,8 @@ export default function AdminDashboard() {
     // Test Payment States
     const [testAmount, setTestAmount] = useState('1');
     const [testDescription, setTestDescription] = useState('Admin Gateway Test');
+
+
 
     // Data states
     const [products, setProducts] = useState<any[]>([]);
@@ -1703,73 +1706,77 @@ export default function AdminDashboard() {
 
                     {/* Settings Tab */}
                     {activeTab === 'settings' && (
-                        <div className="max-w-2xl bg-white border border-gold/10 p-8 md:p-12 rounded-[40px] shadow-sm">
-                            <div className="flex items-center gap-4 mb-6">
-                                <Bell className="text-gold" size={28} />
-                                <h3 className="font-serif text-2xl text-charcoal">Top Announcement Bar</h3>
-                            </div>
-                            <p className="text-sm text-charcoal/40 leading-relaxed">
-                                This bar appears at the very top of your website. Perfect for "Coming Soon" notices, flash sales, or special events.
-                            </p>
-                            <div className="space-y-6 pt-4">
-                                <div className="flex items-center justify-between p-4 bg-gold/5 rounded-2xl border border-gold/10">
-                                    <div>
-                                        <h4 className="font-bold text-sm text-charcoal">Show Announcement</h4>
-                                        <p className="text-[10px] text-charcoal/40 uppercase tracking-widest">Enable or disable the top bar</p>
-                                    </div>
-                                    <button
-                                        onClick={() => setAnnouncement({ ...announcement, show: !announcement.show })}
-                                        className={`w-14 h-8 rounded-full transition-all relative ${announcement.show ? 'bg-gold' : 'bg-charcoal/10'}`}
-                                    >
-                                        <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${announcement.show ? 'left-7' : 'left-1'}`} />
-                                    </button>
+                        <div className="space-y-8">
+                            <div className="max-w-2xl bg-white border border-gold/10 p-8 md:p-12 rounded-[40px] shadow-sm">
+                                <div className="flex items-center gap-4 mb-6">
+                                    <Bell className="text-gold" size={28} />
+                                    <h3 className="font-serif text-2xl text-charcoal">Top Announcement Bar</h3>
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-[10px] font-bold uppercase text-charcoal/40 tracking-widest">Announcement Text</label>
-                                    <input
-                                        type="text"
-                                        value={announcement.text}
-                                        onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
-                                        className="w-full bg-zinc-50 border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none"
-                                        placeholder="Ex: Something Luxurious is Coming Soon..."
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gold/5">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="font-bold text-sm text-charcoal flex items-center gap-2">
-                                                <Clock size={16} className="text-gold" />
-                                                Show Timer
-                                            </h4>
-                                            <button
-                                                onClick={() => setAnnouncement({ ...announcement, showTimer: !announcement.showTimer })}
-                                                className={`w-10 h-6 rounded-full transition-all relative ${announcement.showTimer ? 'bg-gold' : 'bg-charcoal/10'}`}
-                                            >
-                                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${announcement.showTimer ? 'left-4.5' : 'left-0.5'}`} />
-                                            </button>
+                                <p className="text-sm text-charcoal/40 leading-relaxed">
+                                    This bar appears at the very top of your website. Perfect for "Coming Soon" notices, flash sales, or special events.
+                                </p>
+                                <div className="space-y-6 pt-4">
+                                    <div className="flex items-center justify-between p-4 bg-gold/5 rounded-2xl border border-gold/10">
+                                        <div>
+                                            <h4 className="font-bold text-sm text-charcoal">Show Announcement</h4>
+                                            <p className="text-[10px] text-charcoal/40 uppercase tracking-widest">Enable or disable the top bar</p>
                                         </div>
-                                        <p className="text-[10px] text-charcoal/40 leading-tight">Display a live countdown reflecting the end date below.</p>
+                                        <button
+                                            onClick={() => setAnnouncement({ ...announcement, show: !announcement.show })}
+                                            className={`w-14 h-8 rounded-full transition-all relative ${announcement.show ? 'bg-gold' : 'bg-charcoal/10'}`}
+                                        >
+                                            <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all ${announcement.show ? 'left-7' : 'left-1'}`} />
+                                        </button>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-bold uppercase text-charcoal/40 tracking-widest">End Date & Time</label>
+                                        <label className="text-[10px] font-bold uppercase text-charcoal/40 tracking-widest">Announcement Text</label>
                                         <input
-                                            type="datetime-local"
-                                            value={announcement.endDate}
-                                            onChange={(e) => setAnnouncement({ ...announcement, endDate: e.target.value })}
-                                            className="w-full bg-zinc-50 border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none text-sm"
+                                            type="text"
+                                            value={announcement.text}
+                                            onChange={(e) => setAnnouncement({ ...announcement, text: e.target.value })}
+                                            className="w-full bg-zinc-50 border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none"
+                                            placeholder="Ex: Something Luxurious is Coming Soon..."
                                         />
                                     </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gold/5">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between">
+                                                <h4 className="font-bold text-sm text-charcoal flex items-center gap-2">
+                                                    <Clock size={16} className="text-gold" />
+                                                    Show Timer
+                                                </h4>
+                                                <button
+                                                    onClick={() => setAnnouncement({ ...announcement, showTimer: !announcement.showTimer })}
+                                                    className={`w-10 h-6 rounded-full transition-all relative ${announcement.showTimer ? 'bg-gold' : 'bg-charcoal/10'}`}
+                                                >
+                                                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${announcement.showTimer ? 'left-4.5' : 'left-0.5'}`} />
+                                                </button>
+                                            </div>
+                                            <p className="text-[10px] text-charcoal/40 leading-tight">Display a live countdown reflecting the end date below.</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-bold uppercase text-charcoal/40 tracking-widest">End Date & Time</label>
+                                            <input
+                                                type="datetime-local"
+                                                value={announcement.endDate}
+                                                onChange={(e) => setAnnouncement({ ...announcement, endDate: e.target.value })}
+                                                className="w-full bg-zinc-50 border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleSaveAnnouncement}
+                                        disabled={loading}
+                                        className="w-full py-5 gold-gradient text-white font-bold rounded-2xl shadow-xl shadow-gold/20 disabled:opacity-50 shimmer mt-4"
+                                    >
+                                        {loading ? 'Saving Settings...' : 'Save Store Settings'}
+                                    </motion.button>
                                 </div>
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleSaveAnnouncement}
-                                    disabled={loading}
-                                    className="w-full py-5 gold-gradient text-white font-bold rounded-2xl shadow-xl shadow-gold/20 disabled:opacity-50 shimmer mt-4"
-                                >
-                                    {loading ? 'Saving Settings...' : 'Save Store Settings'}
-                                </motion.button>
                             </div>
+
+
                         </div>
                     )}
 
