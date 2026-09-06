@@ -22,6 +22,7 @@ import DriveImage from '../components/DriveImage';
 import { LazyImage } from '../components/LazyImage';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
+import AttarPerfumeOptionModal from '../components/AttarPerfumeOptionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isAttarPerfumeProduct } from '../utils/productUtils';
 
@@ -41,6 +42,8 @@ export default function Collections() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsAppProduct, setWhatsAppProduct] = useState<any>(null);
 
   // Derived category lists
   const allDbCats = categories.filter(c => c.id !== 'all');
@@ -97,6 +100,30 @@ export default function Collections() {
   const handleShopNow = (product: any) => {
     setSelectedProduct(product);
     setIsShippingOpen(true);
+  };
+
+  const handleOpenWhatsAppModal = (prod: any) => {
+    if (isAttarPerfumeProduct(prod, categories)) {
+      setWhatsAppProduct(prod);
+      setIsWhatsAppModalOpen(true);
+    } else {
+      const priceText = prod.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(prod.price || 0).toLocaleString()}`;
+      const imageUrl = prod.images?.[0] || '';
+      const messageText = `Hello! I'm interested in ordering: ${prod.title} (${priceText}). Please provide more details. Image: ${imageUrl}`;
+      const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string) => {
+    setIsWhatsAppModalOpen(false);
+    if (!whatsAppProduct) return;
+    const priceText = whatsAppProduct.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(whatsAppProduct.price || 0).toLocaleString()}`;
+    const imageUrl = whatsAppProduct.images?.[0] || '';
+    const optionStr = fragranceVariant ? `${type} (${fragranceVariant})` : type;
+    const messageText = `Hello! I'm interested in ordering: ${whatsAppProduct.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.origin}/product/${whatsAppProduct.id}`;
+    const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
+    window.open(url, '_blank');
   };
 
   const handleShippingSubmit = async (addressData: AddressData) => {
@@ -489,10 +516,23 @@ export default function Collections() {
                             onClick={() => navigate(`/product/${product.id}`)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className="w-full py-2.5 md:py-3 gold-gradient text-white text-[8px] md:text-[10px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
+                            className="flex-1 py-2.5 md:py-3 gold-gradient text-white text-[8px] md:text-[10px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
                           >
                             Details <ChevronRight size={10} />
                           </motion.button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenWhatsAppModal(product);
+                            }}
+                            className="p-2.5 md:p-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl md:rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
+                            aria-label={`Order ${product.title} on WhatsApp`}
+                            title="Order on WhatsApp"
+                          >
+                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.224-3.826l.37.22c1.497.89 3.212 1.36 4.97 1.361h.005c5.805 0 10.529-4.73 10.533-10.541.002-2.81-1.093-5.45-3.08-7.44C17.09 1.83 14.45 .73 11.65.731c-5.838 0-10.589 4.75-10.593 10.56-.001 1.83.479 3.618 1.386 5.17l.244.417-.98 3.578 3.655-.959z" />
+                            </svg>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -566,6 +606,12 @@ export default function Collections() {
         price={selectedProduct?.price || 0}
         availableFragrances={selectedProduct?.fragranceOptions ? (Array.isArray(selectedProduct.fragranceOptions) ? selectedProduct.fragranceOptions : selectedProduct.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
         fragranceRequired={isAttarPerfumeProduct(selectedProduct, categories)}
+      />
+      <AttarPerfumeOptionModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        product={whatsAppProduct}
+        onConfirm={handleConfirmWhatsAppOption}
       />
     </motion.div>
   );

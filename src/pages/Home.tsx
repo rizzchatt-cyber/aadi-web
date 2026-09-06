@@ -28,6 +28,7 @@ export default function Home() {
 
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isShippingOpen, setIsShippingOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -55,9 +56,15 @@ export default function Home() {
       setBanners(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
+    // Fetch Categories
+    const unsubCategories = onSnapshot(collection(db, "categories"), (snap) => {
+      setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+
     return () => {
       unsubProducts?.();
       unsubBanners?.();
+      unsubCategories?.();
     };
   }, []);
 
@@ -67,7 +74,7 @@ export default function Home() {
   };
 
   const handleOpenWhatsAppModal = (prod: any) => {
-    if (isAttarPerfumeProduct(prod)) {
+    if (isAttarPerfumeProduct(prod, categories)) {
       setWhatsAppProduct(prod);
       setIsWhatsAppModalOpen(true);
     } else {
@@ -386,7 +393,7 @@ export default function Home() {
         codAvailable={selectedProduct?.codAvailable || false}
         price={selectedProduct?.price || 0}
         availableFragrances={selectedProduct?.fragranceOptions ? (Array.isArray(selectedProduct.fragranceOptions) ? selectedProduct.fragranceOptions : selectedProduct.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
-        fragranceRequired={isAttarPerfumeProduct(selectedProduct)}
+        fragranceRequired={isAttarPerfumeProduct(selectedProduct, categories)}
       />
       <AttarPerfumeOptionModal
         isOpen={isWhatsAppModalOpen}
