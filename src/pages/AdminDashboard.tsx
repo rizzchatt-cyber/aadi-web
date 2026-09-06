@@ -25,7 +25,8 @@ import {
     Bell,
     Clock,
     CreditCard,
-    Coins
+    Coins,
+    Sparkles
 } from 'lucide-react';
 import { db, auth } from '../firebase/config';
 
@@ -346,11 +347,17 @@ export default function AdminDashboard() {
             const showRating = formData.get('showRating') === 'on';
             const priceOnRequest = formData.get('priceOnRequest') === 'on';
             const codAvailable = formData.get('codAvailable') === 'on';
+            const hasFragranceOptions = formData.get('hasFragranceOptions') === 'on';
+            const rawFragranceOptions = (formData.get('fragranceOptions') as string) || '';
+            const fragranceOptions = rawFragranceOptions
+                ? rawFragranceOptions.split(',').map((s: string) => s.trim()).filter(Boolean)
+                : [];
 
             const productData = {
                 title, price, discount, category_id, category_ids, description,
                 gender, weight, material, hallmarkInfo, deliveryInfo,
                 rating, reviewCount, showRating, priceOnRequest, codAvailable,
+                hasFragranceOptions, fragranceOptions,
                 images: productImages.filter(url => url.trim() !== ''),
                 updatedAt: new Date().toISOString()
             };
@@ -1481,6 +1488,13 @@ export default function AdminDashboard() {
                                                                     <div className="min-w-0">
                                                                         <div className="text-xs font-bold truncate max-w-[150px]" title={item.productTitle}>{item.productTitle}</div>
                                                                         <div className="text-[10px] text-gold font-medium mt-0.5">₹{(item.price || 0).toLocaleString()}</div>
+                                                                        {(item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption) && (
+                                                                            <div className="mt-1">
+                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold rounded-md text-[9px] font-bold">
+                                                                                    <Sparkles size={10} /> {item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption}
+                                                                                </span>
+                                                                            </div>
+                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -2052,6 +2066,50 @@ export default function AdminDashboard() {
                                         className="rounded text-gold focus:ring-gold"
                                     />
                                     <label className="text-xs font-bold uppercase text-charcoal/60 tracking-wider">Cash on Delivery (COD) Available</label>
+                                </div>
+
+                                <div className="flex items-center gap-2 p-2 col-span-2 sm:col-span-1">
+                                    <input
+                                        type="checkbox"
+                                        name="hasFragranceOptions"
+                                        id="hasFragranceOptions"
+                                        defaultChecked={editingProduct.hasFragranceOptions}
+                                        className="rounded text-gold focus:ring-gold"
+                                    />
+                                    <label htmlFor="hasFragranceOptions" className="text-xs font-bold uppercase text-charcoal/60 tracking-wider cursor-pointer">
+                                        Enable Fragrance / Perfume Options
+                                    </label>
+                                </div>
+
+                                <div className="col-span-2 space-y-2 bg-gold/5 p-4 rounded-2xl border border-gold/10">
+                                    <div className="flex justify-between items-center">
+                                        <label className="text-[10px] font-bold uppercase text-charcoal/60 tracking-wider">
+                                            Fragrance / Perfume Options (Comma-Separated)
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                const container = e.currentTarget.closest('.space-y-2');
+                                                const input = container?.querySelector('input');
+                                                if (input) {
+                                                    input.value = "Vanilla, Chocolate, Sandalwood, Baccarat Rouge 540, Tobacco Vanilla, Lost Cherry, Mitti Attar, Kesar Chandan";
+                                                }
+                                            }}
+                                            className="text-[9px] font-bold text-gold hover:underline cursor-pointer"
+                                        >
+                                            + Load Default Options
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        name="fragranceOptions"
+                                        defaultValue={Array.isArray(editingProduct.fragranceOptions) ? editingProduct.fragranceOptions.join(', ') : (editingProduct.fragranceOptions || '')}
+                                        className="w-full bg-white border border-gold/15 rounded-xl p-3 focus:border-gold outline-none text-xs"
+                                        placeholder="e.g. Vanilla, Chocolate, Sandalwood, Baccarat Rouge 540"
+                                    />
+                                    <p className="text-[9px] text-charcoal/40 italic">
+                                        These options will be presented to the user to choose from when placing an order.
+                                    </p>
                                 </div>
 
                                 <div className="col-span-2 space-y-4 pt-4 border-t border-gold/5">

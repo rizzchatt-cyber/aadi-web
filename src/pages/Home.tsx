@@ -13,7 +13,9 @@ import CarouselBanner from '../components/CarouselBanner';
 import { where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
+import AttarPerfumeOptionModal from '../components/AttarPerfumeOptionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isAttarPerfumeProduct } from '../utils/productUtils';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -31,6 +33,8 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsAppProduct, setWhatsAppProduct] = useState<any>(null);
 
   useEffect(() => {
     // Fetch Featured Products
@@ -62,11 +66,37 @@ export default function Home() {
     setIsShippingOpen(true);
   };
 
+  const handleOpenWhatsAppModal = (prod: any) => {
+    if (isAttarPerfumeProduct(prod)) {
+      setWhatsAppProduct(prod);
+      setIsWhatsAppModalOpen(true);
+    } else {
+      const priceText = prod.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(prod.price || 0).toLocaleString()}`;
+      const imageUrl = prod.images?.[0] || '';
+      const messageText = `Hello! I'm interested in ordering: ${prod.title} (${priceText}). Please provide more details. Image: ${imageUrl}`;
+      const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string) => {
+    setIsWhatsAppModalOpen(false);
+    if (!whatsAppProduct) return;
+    const priceText = whatsAppProduct.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(whatsAppProduct.price || 0).toLocaleString()}`;
+    const imageUrl = whatsAppProduct.images?.[0] || '';
+    const optionStr = fragranceVariant ? `${type} (${fragranceVariant})` : type;
+    const messageText = `Hello! I'm interested in ordering: ${whatsAppProduct.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.origin}/product/${whatsAppProduct.id}`;
+    const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
+    window.open(url, '_blank');
+  };
+
   const handleShippingSubmit = async (addressData: AddressData) => {
     if (!selectedProduct) return;
     setIsSubmitting(true);
 
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
+    const selectedFragrance = addressData.selectedFragrance || '';
+    const productType = addressData.productType || 'Attar';
 
     if (addressData.paymentMethod === 'cod') {
       const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -79,13 +109,17 @@ export default function Home() {
           paymentId: codPaymentId,
           paymentMethod: 'cod',
           shippingAddress: addressData,
+          productType: productType,
+          fragranceOption: selectedFragrance,
           items: [
             {
               productId: selectedProduct.id,
               productTitle: selectedProduct.title,
               price: selectedProduct.price,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1
+              quantity: 1,
+              productType: productType,
+              selectedFragrance: selectedFragrance
             }
           ],
           totalAmount: selectedProduct.price,
@@ -116,13 +150,17 @@ export default function Home() {
               paymentId: paymentId,
               paymentMethod: 'online',
               shippingAddress: addressData,
+              productType: productType,
+              fragranceOption: selectedFragrance,
               items: [
                 {
                   productId: selectedProduct.id,
                   productTitle: selectedProduct.title,
                   price: selectedProduct.price,
                   imageUrl: selectedProduct.images?.[0] || '',
-                  quantity: 1
+                  quantity: 1,
+                  productType: productType,
+                  selectedFragrance: selectedFragrance
                 }
               ],
               totalAmount: selectedProduct.price,
@@ -276,16 +314,16 @@ export default function Home() {
                       </div>
 
                       {product.priceOnRequest ? (
-                        <a
-                          onClick={(e) => e.stopPropagation()}
-                          href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Exclusive Pricing via WhatsApp). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2.5 bg-[#25D366] text-white text-[10px] font-bold rounded-xl shadow-md hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenWhatsAppModal(product);
+                          }}
+                          className="w-full py-2.5 bg-[#25D366] text-white text-[10px] font-bold rounded-xl shadow-md hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center cursor-pointer"
                           aria-label={`Order ${product.title} on WhatsApp`}
                         >
                           Order Now
-                        </a>
+                        </button>
                       ) : (
                         <div className="flex gap-2 w-full">
                           <motion.button
@@ -299,19 +337,19 @@ export default function Home() {
                           >
                             Shop Now
                           </motion.button>
-                          <a
-                            onClick={(e) => e.stopPropagation()}
-                            href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (₹${(product.price || 0).toLocaleString()}). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all flex items-center justify-center"
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenWhatsAppModal(product);
+                            }}
+                            className="p-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer"
                             aria-label={`Order ${product.title} on WhatsApp`}
                             title="Order on WhatsApp"
                           >
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.224-3.826l.37.22c1.497.89 3.212 1.36 4.97 1.361h.005c5.805 0 10.529-4.73 10.533-10.541.002-2.81-1.093-5.45-3.08-7.44C17.09 1.83 14.45 .73 11.65.731c-5.838 0-10.589 4.75-10.593 10.56-.001 1.83.479 3.618 1.386 5.17l.244.417-.98 3.578 3.655-.959z" />
                             </svg>
-                          </a>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -346,6 +384,15 @@ export default function Home() {
         defaultName={user?.displayName || ''}
         defaultEmail={user?.email || ''}
         codAvailable={selectedProduct?.codAvailable || false}
+        price={selectedProduct?.price || 0}
+        availableFragrances={selectedProduct?.fragranceOptions ? (Array.isArray(selectedProduct.fragranceOptions) ? selectedProduct.fragranceOptions : selectedProduct.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
+        fragranceRequired={isAttarPerfumeProduct(selectedProduct)}
+      />
+      <AttarPerfumeOptionModal
+        isOpen={isWhatsAppModalOpen}
+        onClose={() => setIsWhatsAppModalOpen(false)}
+        product={whatsAppProduct}
+        onConfirm={handleConfirmWhatsAppOption}
       />
     </motion.div>
   );

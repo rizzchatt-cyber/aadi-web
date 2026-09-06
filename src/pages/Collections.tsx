@@ -23,6 +23,7 @@ import { LazyImage } from '../components/LazyImage';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isAttarPerfumeProduct } from '../utils/productUtils';
 
 export default function Collections() {
   const navigate = useNavigate();
@@ -103,6 +104,8 @@ export default function Collections() {
     setIsSubmitting(true);
 
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
+    const selectedFragrance = addressData.selectedFragrance || '';
+    const productType = addressData.productType || 'Attar';
 
     if (addressData.paymentMethod === 'cod') {
       const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -115,13 +118,17 @@ export default function Collections() {
           paymentId: codPaymentId,
           paymentMethod: 'cod',
           shippingAddress: addressData,
+          productType: productType,
+          fragranceOption: selectedFragrance,
           items: [
             {
               productId: selectedProduct.id,
               productTitle: selectedProduct.title,
               price: selectedProduct.price,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1
+              quantity: 1,
+              productType: productType,
+              selectedFragrance: selectedFragrance
             }
           ],
           totalAmount: selectedProduct.price,
@@ -152,13 +159,17 @@ export default function Collections() {
               paymentId: paymentId,
               paymentMethod: 'online',
               shippingAddress: addressData,
+              productType: productType,
+              fragranceOption: selectedFragrance,
               items: [
                 {
                   productId: selectedProduct.id,
                   productTitle: selectedProduct.title,
                   price: selectedProduct.price,
                   imageUrl: selectedProduct.images?.[0] || '',
-                  quantity: 1
+                  quantity: 1,
+                  productType: productType,
+                  selectedFragrance: selectedFragrance
                 }
               ],
               totalAmount: selectedProduct.price,
@@ -552,6 +563,9 @@ export default function Collections() {
         defaultName={user?.displayName || ''}
         defaultEmail={user?.email || ''}
         codAvailable={selectedProduct?.codAvailable || false}
+        price={selectedProduct?.price || 0}
+        availableFragrances={selectedProduct?.fragranceOptions ? (Array.isArray(selectedProduct.fragranceOptions) ? selectedProduct.fragranceOptions : selectedProduct.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
+        fragranceRequired={isAttarPerfumeProduct(selectedProduct, categories)}
       />
     </motion.div>
   );

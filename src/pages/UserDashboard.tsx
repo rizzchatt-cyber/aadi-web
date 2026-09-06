@@ -1,7 +1,7 @@
 import { LazyImage } from '../components/LazyImage';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, ShoppingBag, MapPin, LogOut, ShoppingCart, Trash2 } from 'lucide-react';
+import { User, ShoppingBag, MapPin, LogOut, ShoppingCart, Trash2, Sparkles } from 'lucide-react';
 import { auth, db } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -31,6 +31,7 @@ export default function UserDashboard() {
         setIsSubmitting(true);
 
         const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
+        const selectedFragrance = addressData.selectedFragrance || '';
 
         if (addressData.paymentMethod === 'cod') {
             const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -43,12 +44,14 @@ export default function UserDashboard() {
                     paymentId: codPaymentId,
                     paymentMethod: 'cod',
                     shippingAddress: addressData,
+                    fragranceOption: selectedFragrance,
                     items: purchasableItems.map(item => ({
                         productId: item.productId,
                         productTitle: item.productTitle,
                         price: item.price,
                         imageUrl: item.imageUrl || '',
-                        quantity: 1
+                        quantity: 1,
+                        selectedFragrance: selectedFragrance
                     })),
                     totalAmount: totalAmount,
                     status: 'cod_pending',
@@ -77,12 +80,14 @@ export default function UserDashboard() {
                     paymentId: upiPaymentId,
                     paymentMethod: 'upi',
                     shippingAddress: addressData,
+                    fragranceOption: selectedFragrance,
                     items: purchasableItems.map(item => ({
                         productId: item.productId,
                         productTitle: item.productTitle,
                         price: item.price,
                         imageUrl: item.imageUrl || '',
-                        quantity: 1
+                        quantity: 1,
+                        selectedFragrance: selectedFragrance
                     })),
                     totalAmount: totalAmount,
                     status: 'upi_pending',
@@ -117,12 +122,14 @@ export default function UserDashboard() {
                             paymentId: paymentId,
                             paymentMethod: 'online',
                             shippingAddress: addressData,
+                            fragranceOption: selectedFragrance,
                             items: purchasableItems.map(item => ({
                                 productId: item.productId,
                                 productTitle: item.productTitle,
                                 price: item.price,
                                 imageUrl: item.imageUrl || '',
-                                quantity: 1
+                                quantity: 1,
+                                selectedFragrance: selectedFragrance
                             })),
                             totalAmount: totalAmount,
                             status: 'paid',
@@ -431,6 +438,11 @@ export default function UserDashboard() {
                                                             <div className="flex-grow">
                                                                 <h4 className="text-xs font-bold text-charcoal leading-tight">{item.productTitle}</h4>
                                                                 <p className="text-[10px] text-charcoal/50 mt-1">Qty: {item.quantity || 1}</p>
+                                                                {(item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption) && (
+                                                                    <p className="text-[10px] text-gold font-bold flex items-center gap-1 mt-1">
+                                                                        <Sparkles size={10} /> Fragrance: {item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption}
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                             <div className="text-xs font-bold text-gold text-right">
                                                                 ₹{(item.price || 0).toLocaleString()}
