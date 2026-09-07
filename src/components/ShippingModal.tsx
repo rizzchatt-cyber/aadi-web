@@ -15,6 +15,7 @@ export interface AddressData {
     paymentMethod?: 'online' | 'razorpay' | 'upi' | 'cod';
     productType?: 'Attar' | 'Perfume' | string;
     selectedFragrance?: string;
+    selectedSize?: string;
 }
 
 interface ShippingModalProps {
@@ -85,7 +86,8 @@ export default function ShippingModal({
         pinCode: '',
         paymentMethod: 'razorpay',
         productType: 'Attar',
-        selectedFragrance: fragrancesToDisplay[0] || 'Vanilla'
+        selectedFragrance: fragrancesToDisplay[0] || 'Vanilla',
+        selectedSize: '6ml'
     });
 
     const [error, setError] = useState('');
@@ -506,26 +508,55 @@ export default function ShippingModal({
                                                 <div className="grid grid-cols-2 gap-2">
                                                     <button
                                                         type="button"
-                                                        onClick={() => setFormData({ ...formData, productType: 'Attar' })}
+                                                        onClick={() => setFormData({ 
+                                                            ...formData, 
+                                                            productType: 'Attar',
+                                                            selectedSize: ['3ml', '6ml', '12ml'].includes(formData.selectedSize || '') ? formData.selectedSize : '6ml'
+                                                        })}
                                                         className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
                                                             formData.productType === 'Attar'
                                                                 ? 'border-gold bg-gold text-white shadow-xs'
                                                                 : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
                                                         }`}
                                                     >
-                                                        Attar (Pure Oil)
+                                                        Attar (Started ₹99)
                                                     </button>
                                                     <button
                                                         type="button"
-                                                        onClick={() => setFormData({ ...formData, productType: 'Perfume' })}
+                                                        onClick={() => setFormData({ 
+                                                            ...formData, 
+                                                            productType: 'Perfume',
+                                                            selectedSize: ['30ml', '60ml', '100ml'].includes(formData.selectedSize || '') ? formData.selectedSize : '60ml'
+                                                        })}
                                                         className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
                                                             formData.productType === 'Perfume'
                                                                 ? 'border-gold bg-gold text-white shadow-xs'
                                                                 : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
                                                         }`}
                                                     >
-                                                        Perfume (Spray)
+                                                        Perfume Spray (Started ₹199)
                                                     </button>
+                                                </div>
+
+                                                {/* Size / Volume Selection */}
+                                                <div className="space-y-1 pt-1">
+                                                    <span className="text-[10px] font-bold text-charcoal/60 uppercase tracking-wider block">Volume Size:</span>
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        {(formData.productType === 'Attar' ? ['3ml', '6ml', '12ml'] : ['30ml', '60ml', '100ml']).map((sz) => (
+                                                            <button
+                                                                key={sz}
+                                                                type="button"
+                                                                onClick={() => setFormData({ ...formData, selectedSize: sz })}
+                                                                className={`py-2 px-2 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
+                                                                    (formData.selectedSize || (formData.productType === 'Attar' ? '6ml' : '60ml')) === sz
+                                                                        ? 'border-gold bg-gold/15 text-gold border-gold/50 font-black shadow-2xs'
+                                                                        : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
+                                                                }`}
+                                                            >
+                                                                {sz}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}

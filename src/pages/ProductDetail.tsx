@@ -15,7 +15,8 @@ import {
     Plus,
     Minus,
     Share2,
-    ShoppingCart
+    ShoppingCart,
+    Sparkles
 } from 'lucide-react';
 import { db } from '../firebase/config';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
@@ -230,11 +231,12 @@ export default function ProductDetail() {
         }
     };
 
-    const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string) => {
+    const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string, selectedSize?: string) => {
         setIsWhatsAppModalOpen(false);
         const priceText = product.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(product.price || 0).toLocaleString()}`;
         const imageUrl = product.images?.[0] || '';
-        const optionStr = fragranceVariant ? `${type} (${fragranceVariant})` : type;
+        const sizeTag = selectedSize ? ` - ${selectedSize}` : '';
+        const optionStr = fragranceVariant ? `${type} (${fragranceVariant})${sizeTag}` : `${type}${sizeTag}`;
         const messageText = `Hello! I'm interested in ordering: ${product.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.href}`;
         const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
         window.open(url, '_blank');
@@ -390,6 +392,26 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         </div>
+
+                        {isAttarPerfumeProduct(product) && (
+                            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-gold/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs">
+                                <div className="flex items-center gap-2.5">
+                                    <Sparkles className="text-gold shrink-0" size={20} />
+                                    <div>
+                                        <p className="text-xs font-bold uppercase tracking-wider text-charcoal">Format & Starting Prices</p>
+                                        <p className="text-[11px] text-charcoal/60">Choose your format at checkout or on WhatsApp</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2.5 text-xs font-bold">
+                                    <span className="px-3 py-1.5 bg-white rounded-xl border border-gold/20 text-charcoal shadow-2xs">
+                                        💧 Attar (Pure Oil): <strong className="text-gold font-black">Started from ₹99</strong>
+                                    </span>
+                                    <span className="px-3 py-1.5 bg-white rounded-xl border border-gold/20 text-charcoal shadow-2xs">
+                                        💨 Spray (Perfume): <strong className="text-gold font-black">Started from ₹199</strong>
+                                    </span>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mb-12">
                             <div className="relative group">

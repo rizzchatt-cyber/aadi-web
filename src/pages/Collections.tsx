@@ -115,12 +115,13 @@ export default function Collections() {
     }
   };
 
-  const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string) => {
+  const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string, selectedSize?: string) => {
     setIsWhatsAppModalOpen(false);
     if (!whatsAppProduct) return;
     const priceText = whatsAppProduct.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(whatsAppProduct.price || 0).toLocaleString()}`;
     const imageUrl = whatsAppProduct.images?.[0] || '';
-    const optionStr = fragranceVariant ? `${type} (${fragranceVariant})` : type;
+    const sizeTag = selectedSize ? ` - ${selectedSize}` : '';
+    const optionStr = fragranceVariant ? `${type} (${fragranceVariant})${sizeTag}` : `${type}${sizeTag}`;
     const messageText = `Hello! I'm interested in ordering: ${whatsAppProduct.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.origin}/product/${whatsAppProduct.id}`;
     const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
     window.open(url, '_blank');

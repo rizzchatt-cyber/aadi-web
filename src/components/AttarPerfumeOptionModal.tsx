@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Sparkles, MessageCircle, Check, Droplets, Wind } from 'lucide-react';
+import { X, Sparkles, MessageCircle, Check, Droplets, Wind, Ruler } from 'lucide-react';
 
 interface AttarPerfumeOptionModalProps {
     isOpen: boolean;
     onClose: () => void;
     product: any;
-    onConfirm: (productType: 'Attar' | 'Perfume', fragranceVariant: string) => void;
+    onConfirm: (productType: 'Attar' | 'Perfume', fragranceVariant: string, selectedSize?: string) => void;
 }
 
 export default function AttarPerfumeOptionModal({
@@ -16,6 +16,10 @@ export default function AttarPerfumeOptionModal({
     onConfirm
 }: AttarPerfumeOptionModalProps) {
     const [productType, setProductType] = useState<'Attar' | 'Perfume'>('Attar');
+    const [selectedSize, setSelectedSize] = useState<string>('6ml');
+
+    const attarSizes = ['3ml', '6ml', '12ml'];
+    const perfumeSizes = ['30ml', '60ml', '100ml'];
 
     useEffect(() => {
         if (isOpen && product) {
@@ -24,19 +28,37 @@ export default function AttarPerfumeOptionModal({
             const matLower = (product.material || '').toLowerCase();
             if (titleLower.includes('attar') || matLower.includes('attar')) {
                 setProductType('Attar');
+                setSelectedSize('6ml');
             } else if (titleLower.includes('perfume') || matLower.includes('perfume')) {
                 setProductType('Perfume');
+                setSelectedSize('60ml');
             } else {
                 setProductType('Attar');
+                setSelectedSize('6ml');
             }
         }
     }, [isOpen, product]);
 
+    const handleFormatChange = (type: 'Attar' | 'Perfume') => {
+        setProductType(type);
+        if (type === 'Attar') {
+            if (!attarSizes.includes(selectedSize)) {
+                setSelectedSize('6ml');
+            }
+        } else {
+            if (!perfumeSizes.includes(selectedSize)) {
+                setSelectedSize('60ml');
+            }
+        }
+    };
+
     if (!isOpen || !product) return null;
 
     const handleConfirm = () => {
-        onConfirm(productType, '');
+        onConfirm(productType, '', selectedSize);
     };
+
+    const currentSizes = productType === 'Attar' ? attarSizes : perfumeSizes;
 
     return (
         <AnimatePresence>
@@ -76,19 +98,19 @@ export default function AttarPerfumeOptionModal({
                         </div>
                         <h2 className="text-2xl font-serif text-charcoal mb-1">Select Attar or Perfume</h2>
                         <p className="text-[11px] text-charcoal/50 uppercase tracking-widest font-bold">
-                            Choose format preference for {product.title}
+                            Choose format & volume size for {product.title}
                         </p>
                     </div>
 
                     {/* Section 1: Format Type Selection (Attar vs Perfume) */}
                     <div className="space-y-3">
                         <label className="text-xs font-bold uppercase text-charcoal/70 tracking-wider block text-left">
-                            Select Format:
+                            1. Select Format:
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
-                                onClick={() => setProductType('Attar')}
+                                onClick={() => handleFormatChange('Attar')}
                                 className={`p-4 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
                                     productType === 'Attar'
                                         ? 'border-gold bg-gold/10 text-gold shadow-md ring-2 ring-gold/30'
@@ -100,14 +122,14 @@ export default function AttarPerfumeOptionModal({
                                     {productType === 'Attar' && <Check size={18} className="text-gold" />}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-sm text-charcoal">Attar</p>
-                                    <p className="text-[10px] text-charcoal/50">Pure Concentrated Perfume Oil</p>
+                                    <p className="font-bold text-sm text-charcoal">Attar (Pure Oil)</p>
+                                    <p className="text-[10px] font-bold text-gold">Started from ₹99</p>
                                 </div>
                             </button>
 
                             <button
                                 type="button"
-                                onClick={() => setProductType('Perfume')}
+                                onClick={() => handleFormatChange('Perfume')}
                                 className={`p-4 rounded-2xl border text-left flex flex-col gap-2 transition-all cursor-pointer ${
                                     productType === 'Perfume'
                                         ? 'border-gold bg-gold/10 text-gold shadow-md ring-2 ring-gold/30'
@@ -119,10 +141,39 @@ export default function AttarPerfumeOptionModal({
                                     {productType === 'Perfume' && <Check size={18} className="text-gold" />}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-sm text-charcoal">Perfume</p>
-                                    <p className="text-[10px] text-charcoal/50">Spray Atomizer Mist</p>
+                                    <p className="font-bold text-sm text-charcoal">Perfume (Spray)</p>
+                                    <p className="text-[10px] font-bold text-gold">Started from ₹199</p>
                                 </div>
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Section 2: Size / Volume Selection */}
+                    <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                            <label className="text-xs font-bold uppercase text-charcoal/70 tracking-wider block text-left">
+                                2. Select Volume / Size:
+                            </label>
+                            <span className="text-[10px] font-bold uppercase text-gold tracking-widest bg-gold/5 px-2 py-0.5 rounded-md border border-gold/10">
+                                {productType === 'Attar' ? 'Oil Bottle' : 'Spray Atomizer'}
+                            </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2.5">
+                            {currentSizes.map((size) => (
+                                <button
+                                    key={size}
+                                    type="button"
+                                    onClick={() => setSelectedSize(size)}
+                                    className={`py-3 px-3 rounded-2xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                                        selectedSize === size
+                                            ? 'border-gold bg-gold text-white shadow-md font-black scale-[1.02]'
+                                            : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
+                                    }`}
+                                >
+                                    <Ruler size={14} className={selectedSize === size ? 'text-white' : 'text-gold/60'} />
+                                    <span>{size}</span>
+                                </button>
+                            ))}
                         </div>
                     </div>
 
@@ -135,7 +186,7 @@ export default function AttarPerfumeOptionModal({
                             className="w-full py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl shadow-lg shadow-green-500/20 flex items-center justify-center gap-3 transition-all cursor-pointer text-sm uppercase tracking-wider"
                         >
                             <MessageCircle size={20} />
-                            Order on WhatsApp ({productType})
+                            Order on WhatsApp ({productType} - {selectedSize})
                         </motion.button>
                     </div>
                 </motion.div>
