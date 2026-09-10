@@ -60,6 +60,80 @@ export default function ProductDetail() {
         window.scrollTo(0, 0);
     }, [id]);
 
+    useEffect(() => {
+        if (!product) return;
+
+        document.title = `${product.title} | Aaditya's Aura`;
+
+        const formattedImages = (product.images || []).map((img: string) => getOptimizedImageUrl(img));
+        const primaryImage = formattedImages[0] || 'https://aadityasaura.com/logo.png';
+        const description = product.description ? product.description.substring(0, 160) : product.title;
+
+        // Helper function to update or create meta tags
+        const updateMetaTag = (property: string, content: string, isName = false) => {
+            const attr = isName ? 'name' : 'property';
+            let tag = document.querySelector(`meta[${attr}="${property}"]`);
+            if (!tag) {
+                tag = document.createElement('meta');
+                tag.setAttribute(attr, property);
+                document.head.appendChild(tag);
+            }
+            tag.setAttribute('content', content);
+        };
+
+        updateMetaTag('og:title', `${product.title} | Aaditya's Aura`);
+        updateMetaTag('og:description', description);
+        updateMetaTag('og:image', primaryImage);
+        updateMetaTag('og:url', window.location.href);
+        updateMetaTag('twitter:title', `${product.title} | Aaditya's Aura`, true);
+        updateMetaTag('twitter:description', description, true);
+        updateMetaTag('twitter:image', primaryImage, true);
+
+        // Inject Google Store / Shopping Product JSON-LD structured data
+        const scriptId = 'google-product-jsonld';
+        let script = document.getElementById(scriptId);
+        if (!script) {
+            script = document.createElement('script');
+            script.id = scriptId;
+            script.setAttribute('type', 'application/ld+json');
+            document.head.appendChild(script);
+        }
+
+        const schemaData = {
+            "@context": "https://schema.org/",
+            "@type": "Product",
+            "name": product.title,
+            "image": formattedImages,
+            "description": product.description || product.title,
+            "sku": product.id,
+            "mpn": product.id,
+            "brand": {
+                "@type": "Brand",
+                "name": "Aaditya's Aura"
+            },
+            "offers": {
+                "@type": "Offer",
+                "url": window.location.href,
+                "priceCurrency": "INR",
+                "price": product.price ? product.price.toString() : "0",
+                "priceValidUntil": "2027-12-31",
+                "itemCondition": "https://schema.org/NewCondition",
+                "availability": "https://schema.org/InStock",
+                "seller": {
+                    "@type": "Organization",
+                    "name": "Aaditya's Aura"
+                }
+            }
+        };
+
+        script.textContent = JSON.stringify(schemaData);
+
+        return () => {
+            const existing = document.getElementById(scriptId);
+            if (existing) existing.remove();
+        };
+    }, [product]);
+
     const handleAddToCart = async () => {
         if (!product) return;
 

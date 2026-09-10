@@ -2,3 +2,5 @@ User-agent: *
 Allow: /
 
 Sitemap: https://aadityasaura.com/sitemap.xml
+Sitemap: https://aadityasaura.com/google-merchant-feed.xml
+Sitemap: https://aadityasaura.com/google-shopping-feed.xml
