@@ -46,6 +46,14 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
       return absoluteUrl; // Do not proxy local URLs
     }
 
+    if (
+      absoluteUrl.includes('googleusercontent.com') || 
+      absoluteUrl.includes('drive.google.com') || 
+      absoluteUrl.includes('wsrv.nl')
+    ) {
+      return absoluteUrl; // Skip proxying for Google Drive and already proxied URLs
+    }
+
     try {
       const proxyUrl = new URL('https://wsrv.nl/');
       proxyUrl.searchParams.set('url', absoluteUrl);

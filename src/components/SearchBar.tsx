@@ -129,7 +129,7 @@ export default function SearchBar({ onSearch, onFilterChange, onSortChange, sugg
                                         className="flex items-center gap-4 p-3 hover:bg-gold/5 rounded-2xl transition-all group text-left"
                                     >
                                         <div className="w-12 h-12 rounded-xl overflow-hidden bg-luxury-cream/30 border border-gold/5 flex-shrink-0">
-                                            <DriveImage src={item.images?.[0]} alt={item.title} className="w-full h-full object-contain p-1 object-center" />
+                                            <DriveImage src={item.images?.[0]} alt={item.title} className="w-full h-full object-contain p-1 object-center" priority={true} />
                                         </div>
                                         <div className="flex-grow">
                                             <h4 className="text-sm font-bold text-charcoal group-hover:text-gold transition-colors">{item.title}</h4>
