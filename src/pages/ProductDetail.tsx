@@ -15,16 +15,14 @@ import {
     Plus,
     Minus,
     Share2,
-    ShoppingCart,
-    Sparkles
+    ShoppingCart
 } from 'lucide-react';
 import { db } from '../firebase/config';
 import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
-import AttarPerfumeOptionModal from '../components/AttarPerfumeOptionModal';
+import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
-import { isAttarPerfumeProduct } from '../utils/productUtils';
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -36,10 +34,11 @@ export default function ProductDetail() {
     const [activeImage, setActiveImage] = useState(0);
     const [isZoomed, setIsZoomed] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
+    const [isFragranceModalOpen, setIsFragranceModalOpen] = useState(false);
+    const [selectedVariant, setSelectedVariant] = useState<SelectedFragranceVariant | null>(null);
     const [isShippingOpen, setIsShippingOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
-    const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -59,80 +58,6 @@ export default function ProductDetail() {
         fetchProduct();
         window.scrollTo(0, 0);
     }, [id]);
-
-    useEffect(() => {
-        if (!product) return;
-
-        document.title = `${product.title} | Aaditya's Aura`;
-
-        const formattedImages = (product.images || []).map((img: string) => getOptimizedImageUrl(img));
-        const primaryImage = formattedImages[0] || 'https://aadityasaura.com/logo.png';
-        const description = product.description ? product.description.substring(0, 160) : product.title;
-
-        // Helper function to update or create meta tags
-        const updateMetaTag = (property: string, content: string, isName = false) => {
-            const attr = isName ? 'name' : 'property';
-            let tag = document.querySelector(`meta[${attr}="${property}"]`);
-            if (!tag) {
-                tag = document.createElement('meta');
-                tag.setAttribute(attr, property);
-                document.head.appendChild(tag);
-            }
-            tag.setAttribute('content', content);
-        };
-
-        updateMetaTag('og:title', `${product.title} | Aaditya's Aura`);
-        updateMetaTag('og:description', description);
-        updateMetaTag('og:image', primaryImage);
-        updateMetaTag('og:url', window.location.href);
-        updateMetaTag('twitter:title', `${product.title} | Aaditya's Aura`, true);
-        updateMetaTag('twitter:description', description, true);
-        updateMetaTag('twitter:image', primaryImage, true);
-
-        // Inject Google Store / Shopping Product JSON-LD structured data
-        const scriptId = 'google-product-jsonld';
-        let script = document.getElementById(scriptId);
-        if (!script) {
-            script = document.createElement('script');
-            script.id = scriptId;
-            script.setAttribute('type', 'application/ld+json');
-            document.head.appendChild(script);
-        }
-
-        const schemaData = {
-            "@context": "https://schema.org/",
-            "@type": "Product",
-            "name": product.title,
-            "image": formattedImages,
-            "description": product.description || product.title,
-            "sku": product.id,
-            "mpn": product.id,
-            "brand": {
-                "@type": "Brand",
-                "name": "Aaditya's Aura"
-            },
-            "offers": {
-                "@type": "Offer",
-                "url": window.location.href,
-                "priceCurrency": "INR",
-                "price": product.price ? product.price.toString() : "0",
-                "priceValidUntil": "2027-12-31",
-                "itemCondition": "https://schema.org/NewCondition",
-                "availability": "https://schema.org/InStock",
-                "seller": {
-                    "@type": "Organization",
-                    "name": "Aaditya's Aura"
-                }
-            }
-        };
-
-        script.textContent = JSON.stringify(schemaData);
-
-        return () => {
-            const existing = document.getElementById(scriptId);
-            if (existing) existing.remove();
-        };
-    }, [product]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -161,7 +86,45 @@ export default function ProductDetail() {
         }
     };
 
+    const isFragranceProduct = (prod: any) => {
+        if (!prod) return false;
+        const catName = (prod.category_id || prod.categoryName || '').toLowerCase();
+        const matName = (prod.material || '').toLowerCase();
+        if (catName.includes('jewel') || matName.includes('jewel') || matName.includes('gold') || matName.includes('silver')) {
+            if (prod.fragranceOptions?.enabled !== true) return false;
+        }
+        return true;
+    };
+
+    const getFragranceStartingPrices = (prod: any) => {
+        if (!prod) return { attarMin: 199, perfumeMin: 549 };
+        const opts = prod.fragranceOptions || {};
+        const attarPrices = [
+            opts.attar?.['3ml']?.price,
+            opts.attar?.['6ml']?.price,
+            opts.attar?.['9ml']?.price,
+        ].filter(p => p && typeof p === 'number' && p > 0);
+        const perfumePrices = [
+            opts.perfume?.['30ml']?.price,
+            opts.perfume?.['60ml']?.price,
+            opts.perfume?.['100ml']?.price,
+        ].filter(p => p && typeof p === 'number' && p > 0);
+        const attarMin = attarPrices.length > 0 ? Math.min(...attarPrices) : 199;
+        const perfumeMin = perfumePrices.length > 0 ? Math.min(...perfumePrices) : 549;
+        return { attarMin, perfumeMin };
+    };
+
     const handleShopNow = () => {
+        if (isFragranceProduct(product)) {
+            setIsFragranceModalOpen(true);
+        } else {
+            setIsShippingOpen(true);
+        }
+    };
+
+    const handleProceedFromFragranceModal = (variant: SelectedFragranceVariant) => {
+        setSelectedVariant(variant);
+        setIsFragranceModalOpen(false);
         setIsShippingOpen(true);
     };
 
@@ -170,8 +133,10 @@ export default function ProductDetail() {
         setIsSubmitting(true);
 
         const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
-        const selectedFragrance = addressData.selectedFragrance || '';
-        const productType = addressData.productType || 'Attar';
+        const finalPrice = selectedVariant ? selectedVariant.price : (product.price || 0);
+        const itemTitle = selectedVariant 
+            ? `${product.title} (${selectedVariant.type} • ${selectedVariant.size})`
+            : product.title;
 
         if (addressData.paymentMethod === 'cod') {
             const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -184,20 +149,17 @@ export default function ProductDetail() {
                     paymentId: codPaymentId,
                     paymentMethod: 'cod',
                     shippingAddress: addressData,
-                    productType: productType,
-                    fragranceOption: selectedFragrance,
+                    selectedVariant: selectedVariant || null,
                     items: [
                         {
                             productId: id,
-                            productTitle: product.title,
-                            price: product.price,
+                            productTitle: itemTitle,
+                            price: finalPrice,
                             imageUrl: product.images?.[0] || '',
-                            quantity: 1,
-                            productType: productType,
-                            selectedFragrance: selectedFragrance
+                            quantity: 1
                         }
                     ],
-                    totalAmount: product.price,
+                    totalAmount: finalPrice,
                     status: 'cod_pending',
                     createdAt: new Date().toISOString()
                 });
@@ -219,20 +181,17 @@ export default function ProductDetail() {
                     paymentId: upiPaymentId,
                     paymentMethod: 'upi',
                     shippingAddress: addressData,
-                    productType: productType,
-                    fragranceOption: selectedFragrance,
+                    selectedVariant: selectedVariant || null,
                     items: [
                         {
                             productId: id,
-                            productTitle: product.title,
-                            price: product.price,
+                            productTitle: itemTitle,
+                            price: finalPrice,
                             imageUrl: product.images?.[0] || '',
-                            quantity: 1,
-                            productType: productType,
-                            selectedFragrance: selectedFragrance
+                            quantity: 1
                         }
                     ],
-                    totalAmount: product.price,
+                    totalAmount: finalPrice,
                     status: 'upi_pending',
                     createdAt: new Date().toISOString()
                 });
@@ -245,8 +204,8 @@ export default function ProductDetail() {
             }
         } else {
             checkoutWithRazorpay({
-                amount: product.price,
-                description: product.title,
+                amount: finalPrice,
+                description: itemTitle,
                 userName: addressData.fullName,
                 userEmail: emailToSave,
                 userPhone: addressData.phone,
@@ -260,20 +219,17 @@ export default function ProductDetail() {
                             paymentId: paymentId,
                             paymentMethod: 'online',
                             shippingAddress: addressData,
-                            productType: productType,
-                            fragranceOption: selectedFragrance,
+                            selectedVariant: selectedVariant || null,
                             items: [
                                 {
                                     productId: id,
-                                    productTitle: product.title,
-                                    price: product.price,
+                                    productTitle: itemTitle,
+                                    price: finalPrice,
                                     imageUrl: product.images?.[0] || '',
-                                    quantity: 1,
-                                    productType: productType,
-                                    selectedFragrance: selectedFragrance
+                                    quantity: 1
                                 }
                             ],
-                            totalAmount: product.price,
+                            totalAmount: finalPrice,
                             status: 'paid',
                             createdAt: new Date().toISOString()
                         });
@@ -292,28 +248,11 @@ export default function ProductDetail() {
         }
     };
 
-    const handleWhatsAppClick = () => {
-        if (!product) return;
-        if (isAttarPerfumeProduct(product)) {
-            setIsWhatsAppModalOpen(true);
-        } else {
-            const priceText = product.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(product.price || 0).toLocaleString()}`;
-            const imageUrl = product.images?.[0] || '';
-            const messageText = `Hello! I'm interested in ordering: ${product.title} (${priceText}).\n\nImage: ${imageUrl}\n\nLink: ${window.location.href}`;
-            const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
-            window.open(url, '_blank');
-        }
-    };
-
-    const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string, selectedSize?: string) => {
-        setIsWhatsAppModalOpen(false);
+    const getWhatsAppLink = () => {
         const priceText = product.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(product.price || 0).toLocaleString()}`;
         const imageUrl = product.images?.[0] || '';
-        const sizeTag = selectedSize ? ` - ${selectedSize}` : '';
-        const optionStr = fragranceVariant ? `${type} (${fragranceVariant})${sizeTag}` : `${type}${sizeTag}`;
-        const messageText = `Hello! I'm interested in ordering: ${product.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.href}`;
-        const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
-        window.open(url, '_blank');
+        const message = encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (${priceText}).\n\nImage: ${imageUrl}\n\nLink: ${window.location.href}`);
+        return `https://wa.me/918653535303?text=${message}`;
     };
 
     if (loading) {
@@ -403,27 +342,43 @@ export default function ProductDetail() {
                                 <span className="px-3 py-1 bg-gold/5 border border-gold/20 text-gold text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
                                     {product.material || 'Aura Selection'}
                                 </span>
-                                {product.showRating && product.rating > 0 && (
-                                    <div className="flex items-center gap-1 text-gold">
-                                        <Star size={14} fill="currentColor" />
-                                        <span className="text-xs font-bold">{product.rating}</span>
-                                        <span className="text-charcoal/30 text-[10px] font-bold">({product.reviewCount} Reviews)</span>
-                                    </div>
-                                )}
                             </div>
                             <h1 className="text-4xl md:text-5xl font-serif text-charcoal mb-4 leading-tight">{product.title}</h1>
                             <div className="flex items-center gap-4">
-                                {product.priceOnRequest ? (
+                                {isFragranceProduct(product) ? (
+                                    <div className="flex flex-col gap-2 bg-gold/5 p-4 rounded-2xl border border-gold/10 w-full">
+                                        <div className="flex flex-wrap items-center gap-6">
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-xs font-bold text-gold uppercase tracking-wider">Attar Starting</span>
+                                                <span className="text-2xl font-serif font-bold text-charcoal">
+                                                    ₹{getFragranceStartingPrices(product).attarMin.toLocaleString()}
+                                                </span>
+                                            </div>
+                                            <div className="w-px h-6 bg-gold/20 hidden sm:block" />
+                                            <div className="flex items-baseline gap-2">
+                                                <span className="text-xs font-bold text-gold uppercase tracking-wider">Perfume Starting</span>
+                                                <span className="text-2xl font-serif font-bold text-charcoal">
+                                                    ₹{getFragranceStartingPrices(product).perfumeMin.toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <p className="text-[10px] font-bold text-charcoal/50 uppercase tracking-widest mt-1">
+                                            Select size (3ml, 6ml, 9ml Attar & 30ml, 60ml, 100ml Perfume)
+                                        </p>
+                                    </div>
+                                ) : product.priceOnRequest ? (
                                     <div className="flex flex-col gap-4">
                                         <p className="text-2xl md:text-3xl font-serif text-gold font-bold">Exclusive Pricing via WhatsApp</p>
-                                        <motion.button
+                                        <motion.a
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            onClick={() => setIsWhatsAppModalOpen(true)}
-                                            className="px-6 py-3 bg-[#25D366] text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-green-500/10 flex items-center justify-center gap-2 w-fit cursor-pointer"
+                                            href={getWhatsAppLink()}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="px-6 py-3 bg-[#25D366] text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-green-500/10 flex items-center justify-center gap-2 w-fit"
                                         >
                                             <MessageCircle size={16} /> Order on WhatsApp
-                                        </motion.button>
+                                        </motion.a>
                                     </div>
                                 ) : (
                                     <>
@@ -466,26 +421,6 @@ export default function ProductDetail() {
                                 </div>
                             </div>
                         </div>
-
-                        {isAttarPerfumeProduct(product) && (
-                            <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50/50 border border-gold/20 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs">
-                                <div className="flex items-center gap-2.5">
-                                    <Sparkles className="text-gold shrink-0" size={20} />
-                                    <div>
-                                        <p className="text-xs font-bold uppercase tracking-wider text-charcoal">Format & Starting Prices</p>
-                                        <p className="text-[11px] text-charcoal/60">Choose your format at checkout or on WhatsApp</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2.5 text-xs font-bold">
-                                    <span className="px-3 py-1.5 bg-white rounded-xl border border-gold/20 text-charcoal shadow-2xs">
-                                        💧 Attar (Pure Oil): <strong className="text-gold font-black">Started from ₹99</strong>
-                                    </span>
-                                    <span className="px-3 py-1.5 bg-white rounded-xl border border-gold/20 text-charcoal shadow-2xs">
-                                        💨 Spray (Perfume): <strong className="text-gold font-black">Started from ₹199</strong>
-                                    </span>
-                                </div>
-                            </div>
-                        )}
 
                         <div className="mb-12">
                             <div className="relative group">
@@ -546,15 +481,17 @@ export default function ProductDetail() {
                                 </motion.button>
                             )}
                             <div className="flex flex-col sm:flex-row gap-4">
-                                <motion.button
+                                <motion.a
                                     whileHover={{ scale: 1.02, backgroundColor: '#128C7E' }}
                                     whileTap={{ scale: 0.98 }}
-                                    onClick={handleWhatsAppClick}
-                                    className="flex-grow py-5 bg-[#25D366] text-white font-bold rounded-2xl shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 transition-all cursor-pointer"
+                                    href={getWhatsAppLink()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-grow py-5 bg-[#25D366] text-white font-bold rounded-2xl shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 transition-all"
                                 >
                                     <MessageCircle size={24} />
                                     Order on WhatsApp
-                                </motion.button>
+                                </motion.a>
                                 <motion.button
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.95 }}
@@ -594,6 +531,14 @@ export default function ProductDetail() {
                 )}
             </AnimatePresence>
 
+            {/* Fragrance Variant Selection Modal */}
+            <FragranceSelectionModal
+                isOpen={isFragranceModalOpen}
+                onClose={() => setIsFragranceModalOpen(false)}
+                product={product}
+                onProceedToCheckout={handleProceedFromFragranceModal}
+            />
+
             {/* Shipping Address Modal */}
             <ShippingModal
                 isOpen={isShippingOpen}
@@ -615,17 +560,8 @@ export default function ProductDetail() {
                 defaultName={user?.displayName || ''}
                 defaultEmail={user?.email || ''}
                 codAvailable={product?.codAvailable || false}
-                price={product?.price || 0}
-                availableFragrances={product?.fragranceOptions ? (Array.isArray(product.fragranceOptions) ? product.fragranceOptions : product.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
-                fragranceRequired={isAttarPerfumeProduct(product)}
-            />
-
-            {/* Attar / Perfume WhatsApp Option Popup */}
-            <AttarPerfumeOptionModal
-                isOpen={isWhatsAppModalOpen}
-                onClose={() => setIsWhatsAppModalOpen(false)}
-                product={product}
-                onConfirm={handleConfirmWhatsAppOption}
+                price={selectedVariant ? selectedVariant.price : (product?.price || 0)}
+                selectedVariant={selectedVariant}
             />
         </div>
     );

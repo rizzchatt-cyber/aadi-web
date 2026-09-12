@@ -13,9 +13,8 @@ import CarouselBanner from '../components/CarouselBanner';
 import { where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
-import AttarPerfumeOptionModal from '../components/AttarPerfumeOptionModal';
+import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
-import { isAttarPerfumeProduct } from '../utils/productUtils';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -28,14 +27,13 @@ export default function Home() {
 
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [banners, setBanners] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isFragranceModalOpen, setIsFragranceModalOpen] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<SelectedFragranceVariant | null>(null);
   const [isShippingOpen, setIsShippingOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
-  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
-  const [whatsAppProduct, setWhatsAppProduct] = useState<any>(null);
 
   useEffect(() => {
     // Fetch Featured Products
@@ -56,46 +54,55 @@ export default function Home() {
       setBanners(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
 
-    // Fetch Categories
-    const unsubCategories = onSnapshot(collection(db, "categories"), (snap) => {
-      setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-    });
-
     return () => {
       unsubProducts?.();
       unsubBanners?.();
-      unsubCategories?.();
     };
   }, []);
 
-  const handleShopNow = (product: any) => {
-    setSelectedProduct(product);
-    setIsShippingOpen(true);
+  const isFragranceProduct = (prod: any) => {
+    if (!prod) return false;
+    const catName = (prod.category_id || prod.categoryName || '').toLowerCase();
+    const matName = (prod.material || '').toLowerCase();
+    if (catName.includes('jewel') || matName.includes('jewel') || matName.includes('gold') || matName.includes('silver')) {
+      if (prod.fragranceOptions?.enabled !== true) return false;
+    }
+    return true;
   };
 
-  const handleOpenWhatsAppModal = (prod: any) => {
-    if (isAttarPerfumeProduct(prod, categories)) {
-      setWhatsAppProduct(prod);
-      setIsWhatsAppModalOpen(true);
+  const getFragranceStartingPrices = (prod: any) => {
+    const opts = prod?.fragranceOptions || {};
+    const attarPrices = [
+      opts.attar?.['3ml']?.price,
+      opts.attar?.['6ml']?.price,
+      opts.attar?.['9ml']?.price,
+    ].filter(p => p && typeof p === 'number' && p > 0);
+    const perfumePrices = [
+      opts.perfume?.['30ml']?.price,
+      opts.perfume?.['60ml']?.price,
+      opts.perfume?.['100ml']?.price,
+    ].filter(p => p && typeof p === 'number' && p > 0);
+
+    const attarMin = attarPrices.length > 0 ? Math.min(...attarPrices) : 199;
+    const perfumeMin = perfumePrices.length > 0 ? Math.min(...perfumePrices) : 549;
+
+    return { attarMin, perfumeMin };
+  };
+
+  const handleShopNow = (product: any) => {
+    setSelectedProduct(product);
+    if (isFragranceProduct(product)) {
+      setIsFragranceModalOpen(true);
     } else {
-      const priceText = prod.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(prod.price || 0).toLocaleString()}`;
-      const imageUrl = prod.images?.[0] || '';
-      const messageText = `Hello! I'm interested in ordering: ${prod.title} (${priceText}). Please provide more details. Image: ${imageUrl}`;
-      const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
-      window.open(url, '_blank');
+      setSelectedVariant(null);
+      setIsShippingOpen(true);
     }
   };
 
-  const handleConfirmWhatsAppOption = (type: 'Attar' | 'Perfume', fragranceVariant: string, selectedSize?: string) => {
-    setIsWhatsAppModalOpen(false);
-    if (!whatsAppProduct) return;
-    const priceText = whatsAppProduct.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(whatsAppProduct.price || 0).toLocaleString()}`;
-    const imageUrl = whatsAppProduct.images?.[0] || '';
-    const sizeTag = selectedSize ? ` - ${selectedSize}` : '';
-    const optionStr = fragranceVariant ? `${type} (${fragranceVariant})${sizeTag}` : `${type}${sizeTag}`;
-    const messageText = `Hello! I'm interested in ordering: ${whatsAppProduct.title} (${priceText}).\nOption Selected: ${optionStr}\n\nImage: ${imageUrl}\n\nLink: ${window.location.origin}/product/${whatsAppProduct.id}`;
-    const url = `https://wa.me/918653535303?text=${encodeURIComponent(messageText)}`;
-    window.open(url, '_blank');
+  const handleProceedFromFragranceModal = (variant: SelectedFragranceVariant) => {
+    setSelectedVariant(variant);
+    setIsFragranceModalOpen(false);
+    setIsShippingOpen(true);
   };
 
   const handleShippingSubmit = async (addressData: AddressData) => {
@@ -103,8 +110,10 @@ export default function Home() {
     setIsSubmitting(true);
 
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
-    const selectedFragrance = addressData.selectedFragrance || '';
-    const productType = addressData.productType || 'Attar';
+    const finalPrice = selectedVariant ? selectedVariant.price : (selectedProduct.price || 0);
+    const itemTitle = selectedVariant 
+      ? `${selectedProduct.title} (${selectedVariant.type} • ${selectedVariant.size})`
+      : selectedProduct.title;
 
     if (addressData.paymentMethod === 'cod') {
       const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -117,20 +126,17 @@ export default function Home() {
           paymentId: codPaymentId,
           paymentMethod: 'cod',
           shippingAddress: addressData,
-          productType: productType,
-          fragranceOption: selectedFragrance,
+          selectedVariant: selectedVariant || null,
           items: [
             {
               productId: selectedProduct.id,
-              productTitle: selectedProduct.title,
-              price: selectedProduct.price,
+              productTitle: itemTitle,
+              price: finalPrice,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1,
-              productType: productType,
-              selectedFragrance: selectedFragrance
+              quantity: 1
             }
           ],
-          totalAmount: selectedProduct.price,
+          totalAmount: finalPrice,
           status: 'cod_pending',
           createdAt: new Date().toISOString()
         });
@@ -143,8 +149,8 @@ export default function Home() {
       }
     } else {
       checkoutWithRazorpay({
-        amount: selectedProduct.price,
-        description: selectedProduct.title,
+        amount: finalPrice,
+        description: itemTitle,
         userName: addressData.fullName,
         userEmail: emailToSave,
         userPhone: addressData.phone,
@@ -158,20 +164,17 @@ export default function Home() {
               paymentId: paymentId,
               paymentMethod: 'online',
               shippingAddress: addressData,
-              productType: productType,
-              fragranceOption: selectedFragrance,
+              selectedVariant: selectedVariant || null,
               items: [
                 {
                   productId: selectedProduct.id,
-                  productTitle: selectedProduct.title,
-                  price: selectedProduct.price,
+                  productTitle: itemTitle,
+                  price: finalPrice,
                   imageUrl: selectedProduct.images?.[0] || '',
-                  quantity: 1,
-                  productType: productType,
-                  selectedFragrance: selectedFragrance
+                  quantity: 1
                 }
               ],
-              totalAmount: selectedProduct.price,
+              totalAmount: finalPrice,
               status: 'paid',
               createdAt: new Date().toISOString()
             });
@@ -316,22 +319,33 @@ export default function Home() {
                     <div className="w-8 h-px bg-gold/10 mx-auto mb-6 group-hover:w-16 group-hover:bg-gold transition-all duration-700" />
                     <div className="flex flex-col items-center mt-auto gap-4">
                       <div className="flex flex-col items-center">
-                        {product.priceOnRequest ? null : (
+                        {isFragranceProduct(product) ? (
+                          <div className="flex flex-col gap-0.5 text-center">
+                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-xs">
+                              <span className="font-bold text-gold uppercase tracking-wider">Attar Starting</span>
+                              <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).attarMin.toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-xs">
+                              <span className="font-bold text-gold uppercase tracking-wider">Perfume Starting</span>
+                              <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).perfumeMin.toLocaleString()}</span>
+                            </div>
+                          </div>
+                        ) : product.priceOnRequest ? null : (
                           <span className="text-sm font-black text-gray-900 tracking-tighter">₹{(product.price || 0).toLocaleString()}</span>
                         )}
                       </div>
 
-                      {product.priceOnRequest ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenWhatsAppModal(product);
-                          }}
-                          className="w-full py-2.5 bg-[#25D366] text-white text-[10px] font-bold rounded-xl shadow-md hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center cursor-pointer"
+                      {product.priceOnRequest && !isFragranceProduct(product) ? (
+                        <a
+                          onClick={(e) => e.stopPropagation()}
+                          href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Exclusive Pricing via WhatsApp). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2.5 bg-[#25D366] text-white text-[10px] font-bold rounded-xl shadow-md hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center"
                           aria-label={`Order ${product.title} on WhatsApp`}
                         >
                           Order Now
-                        </button>
+                        </a>
                       ) : (
                         <div className="flex gap-2 w-full">
                           <motion.button
@@ -345,19 +359,19 @@ export default function Home() {
                           >
                             Shop Now
                           </motion.button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenWhatsAppModal(product);
-                            }}
-                            className="p-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all flex items-center justify-center cursor-pointer"
+                          <a
+                            onClick={(e) => e.stopPropagation()}
+                            href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (₹${(product.price || 0).toLocaleString()}). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all flex items-center justify-center"
                             aria-label={`Order ${product.title} on WhatsApp`}
                             title="Order on WhatsApp"
                           >
                             <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                               <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.224-3.826l.37.22c1.497.89 3.212 1.36 4.97 1.361h.005c5.805 0 10.529-4.73 10.533-10.541.002-2.81-1.093-5.45-3.08-7.44C17.09 1.83 14.45 .73 11.65.731c-5.838 0-10.589 4.75-10.593 10.56-.001 1.83.479 3.618 1.386 5.17l.244.417-.98 3.578 3.655-.959z" />
                             </svg>
-                          </button>
+                          </a>
                         </div>
                       )}
                     </div>
@@ -372,6 +386,12 @@ export default function Home() {
       </section>
 
       <WhyChooseUs />
+      <FragranceSelectionModal
+        isOpen={isFragranceModalOpen}
+        onClose={() => setIsFragranceModalOpen(false)}
+        product={selectedProduct}
+        onProceedToCheckout={handleProceedFromFragranceModal}
+      />
       <ShippingModal
         isOpen={isShippingOpen}
         onClose={() => {
@@ -392,15 +412,8 @@ export default function Home() {
         defaultName={user?.displayName || ''}
         defaultEmail={user?.email || ''}
         codAvailable={selectedProduct?.codAvailable || false}
-        price={selectedProduct?.price || 0}
-        availableFragrances={selectedProduct?.fragranceOptions ? (Array.isArray(selectedProduct.fragranceOptions) ? selectedProduct.fragranceOptions : selectedProduct.fragranceOptions.split(',').map((s: string) => s.trim())) : undefined}
-        fragranceRequired={isAttarPerfumeProduct(selectedProduct, categories)}
-      />
-      <AttarPerfumeOptionModal
-        isOpen={isWhatsAppModalOpen}
-        onClose={() => setIsWhatsAppModalOpen(false)}
-        product={whatsAppProduct}
-        onConfirm={handleConfirmWhatsAppOption}
+        price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
+        selectedVariant={selectedVariant}
       />
     </motion.div>
   );

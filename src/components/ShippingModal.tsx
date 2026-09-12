@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, MapPin, Phone, User, Home, Navigation, Mail, CheckCircle2, ChevronLeft, CreditCard, Sparkles, Loader2, QrCode, Copy, Check, Clock, Smartphone, ExternalLink, RefreshCw } from 'lucide-react';
 import QRCode from 'qrcode';
@@ -13,9 +14,6 @@ export interface AddressData {
     state: string;
     pinCode: string;
     paymentMethod?: 'online' | 'razorpay' | 'upi' | 'cod';
-    productType?: 'Attar' | 'Perfume' | string;
-    selectedFragrance?: string;
-    selectedSize?: string;
 }
 
 interface ShippingModalProps {
@@ -29,8 +27,13 @@ interface ShippingModalProps {
     defaultEmail?: string;
     codAvailable?: boolean;
     price?: number;
-    availableFragrances?: string[];
-    fragranceRequired?: boolean;
+    selectedVariant?: {
+        type: string;
+        size: string;
+        price: number;
+        typeLabel?: string;
+        sizeLabel?: string;
+    } | null;
 }
 
 interface Particle {
@@ -55,26 +58,9 @@ export default function ShippingModal({
     defaultEmail = '',
     codAvailable = false,
     price = 0,
-    availableFragrances = [],
-    fragranceRequired = false
+    selectedVariant = null
 }: ShippingModalProps) {
     const [step, setStep] = useState<1 | 2 | 2.5 | 3>(1);
-
-    const defaultFragranceList = [
-        "Vanilla",
-        "Chocolate",
-        "Sandalwood",
-        "Baccarat Rouge 540",
-        "Tobacco Vanilla",
-        "Lost Cherry",
-        "Mitti Attar",
-        "Kesar Chandan"
-    ];
-
-    const fragrancesToDisplay = (availableFragrances && availableFragrances.length > 0)
-        ? availableFragrances
-        : defaultFragranceList;
-
     const [formData, setFormData] = useState<AddressData>({
         email: defaultEmail,
         fullName: defaultName,
@@ -84,10 +70,7 @@ export default function ShippingModal({
         city: '',
         state: '',
         pinCode: '',
-        paymentMethod: 'razorpay',
-        productType: 'Attar',
-        selectedFragrance: fragrancesToDisplay[0] || 'Vanilla',
-        selectedSize: '6ml'
+        paymentMethod: 'razorpay'
     });
 
     const [error, setError] = useState('');
@@ -148,9 +131,7 @@ export default function ShippingModal({
                 city: '',
                 state: '',
                 pinCode: '',
-                paymentMethod: 'razorpay',
-                productType: 'Attar',
-                selectedFragrance: fragrancesToDisplay[0] || 'Vanilla'
+                paymentMethod: 'razorpay'
             });
             setStep(1);
             setError('');
@@ -159,7 +140,7 @@ export default function ShippingModal({
             setCopiedOrder(false);
             setShowAppChooser(false);
         }
-    }, [isOpen, defaultName, defaultPhone, defaultEmail, codAvailable, availableFragrances]);
+    }, [isOpen, defaultName, defaultPhone, defaultEmail, codAvailable]);
 
     useEffect(() => {
         if (orderSuccessId) {
@@ -290,10 +271,12 @@ export default function ShippingModal({
         }
     };
 
-    return (
+    if (!isOpen) return null;
+
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 overflow-hidden">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -493,73 +476,6 @@ export default function ShippingModal({
                                                 required
                                             />
                                         </div>
-
-                                        {/* Fragrance / Perfume Option Selection - Shown only for Attar/Perfume products */}
-                                        {fragranceRequired && (
-                                            <div className="space-y-3 bg-gradient-to-r from-amber-50/60 to-white p-4 rounded-2xl border border-gold/20 shadow-xs text-left">
-                                                <div className="flex items-center gap-2">
-                                                    <Sparkles className="text-gold" size={16} />
-                                                    <label className="text-xs font-bold uppercase text-charcoal tracking-wider">
-                                                        Attar or Perfume Selection
-                                                    </label>
-                                                </div>
-
-                                                {/* Attar vs Perfume Toggle */}
-                                                <div className="grid grid-cols-2 gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFormData({ 
-                                                            ...formData, 
-                                                            productType: 'Attar',
-                                                            selectedSize: ['3ml', '6ml', '12ml'].includes(formData.selectedSize || '') ? formData.selectedSize : '6ml'
-                                                        })}
-                                                        className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                                                            formData.productType === 'Attar'
-                                                                ? 'border-gold bg-gold text-white shadow-xs'
-                                                                : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
-                                                        }`}
-                                                    >
-                                                        Attar (Started ₹99)
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFormData({ 
-                                                            ...formData, 
-                                                            productType: 'Perfume',
-                                                            selectedSize: ['30ml', '60ml', '100ml'].includes(formData.selectedSize || '') ? formData.selectedSize : '60ml'
-                                                        })}
-                                                        className={`py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                                                            formData.productType === 'Perfume'
-                                                                ? 'border-gold bg-gold text-white shadow-xs'
-                                                                : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
-                                                        }`}
-                                                    >
-                                                        Perfume Spray (Started ₹199)
-                                                    </button>
-                                                </div>
-
-                                                {/* Size / Volume Selection */}
-                                                <div className="space-y-1 pt-1">
-                                                    <span className="text-[10px] font-bold text-charcoal/60 uppercase tracking-wider block">Volume Size:</span>
-                                                    <div className="grid grid-cols-3 gap-2">
-                                                        {(formData.productType === 'Attar' ? ['3ml', '6ml', '12ml'] : ['30ml', '60ml', '100ml']).map((sz) => (
-                                                            <button
-                                                                key={sz}
-                                                                type="button"
-                                                                onClick={() => setFormData({ ...formData, selectedSize: sz })}
-                                                                className={`py-2 px-2 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                                                                    (formData.selectedSize || (formData.productType === 'Attar' ? '6ml' : '60ml')) === sz
-                                                                        ? 'border-gold bg-gold/15 text-gold border-gold/50 font-black shadow-2xs'
-                                                                        : 'border-gold/20 bg-white text-charcoal/70 hover:border-gold/40'
-                                                                }`}
-                                                            >
-                                                                {sz}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
                                     <div className="pt-4 flex gap-4">
@@ -594,10 +510,10 @@ export default function ShippingModal({
                                         </p>
                                     </div>
 
-                                    {/* Address Verification Summary */}
+                                    {/* Address Verification & Variant Summary */}
                                     <div className="bg-gold/5 rounded-2xl border border-gold/10 p-4 text-left space-y-1">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-[9px] font-black uppercase text-gold tracking-widest">Delivery Summary</span>
+                                            <span className="text-[9px] font-black uppercase text-gold tracking-widest">Delivery & Item Summary</span>
                                             <button 
                                                 type="button" 
                                                 disabled={isSubmitting} 
@@ -607,13 +523,16 @@ export default function ShippingModal({
                                                 Edit
                                             </button>
                                         </div>
+                                        {selectedVariant && (
+                                            <div className="mb-2 pb-2 border-b border-gold/10 flex justify-between items-center">
+                                                <span className="inline-block px-2.5 py-0.5 bg-gold/10 border border-gold/20 text-gold text-[10px] font-bold rounded-md">
+                                                    {selectedVariant.type} • {selectedVariant.size}
+                                                </span>
+                                                <span className="text-xs font-serif font-black text-gold">₹{selectedVariant.price.toLocaleString()}</span>
+                                            </div>
+                                        )}
                                         <p className="text-xs font-bold text-charcoal">{formData.fullName} • {formData.phone}</p>
                                         <p className="text-xs text-charcoal/60 truncate">{formData.addressLine1}, {formData.addressLine2 && `${formData.addressLine2}, `}{formData.city}, {formData.state} - {formData.pinCode}</p>
-                                        {(formData.productType || formData.selectedFragrance) && (
-                                            <p className="text-xs font-bold text-gold flex items-center gap-1 pt-1 border-t border-gold/10 mt-1">
-                                                <Sparkles size={12} /> {formData.productType ? `${formData.productType} • ` : ''}{formData.selectedFragrance}
-                                            </p>
-                                        )}
                                     </div>
 
                                     {/* Payment Options Header */}
@@ -1002,6 +921,7 @@ export default function ShippingModal({
                     </motion.div>
                 </div>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }

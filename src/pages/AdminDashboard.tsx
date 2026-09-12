@@ -185,12 +185,133 @@ export default function AdminDashboard() {
     const [newImgUrl, setNewImgUrl] = useState('');
     const [selectedCategoryIdsForm, setSelectedCategoryIdsForm] = useState<string[]>([]);
     const [announcement, setAnnouncement] = useState({ show: false, text: '', showTimer: false, endDate: '' });
+    
+    const cleanFirestoreData = (obj: any): any => {
+        if (obj === null || obj === undefined) return null;
+        if (Array.isArray(obj)) return obj.map(cleanFirestoreData);
+        if (typeof obj === 'object') {
+            const cleaned: any = {};
+            for (const [key, value] of Object.entries(obj)) {
+                if (value !== undefined) {
+                    cleaned[key] = cleanFirestoreData(value);
+                }
+            }
+            return cleaned;
+        }
+        return obj;
+    };
+
+    // Fragrance Options State (Attar & Perfume prices & toggles)
+    const defaultFragranceState = {
+        enabled: true,
+        attar: {
+            enabled: true,
+            '3ml': { enabled: true, price: 199 },
+            '6ml': { enabled: true, price: 349 },
+            '9ml': { enabled: true, price: 549 }
+        },
+        perfume: {
+            enabled: true,
+            '30ml': { enabled: true, price: 549 },
+            '60ml': { enabled: true, price: 799 },
+            '100ml': { enabled: true, price: 1499 }
+        }
+    };
+    const [fragranceOptions, setFragranceOptions] = useState<any>(defaultFragranceState);
+
+    // Category-wide Fragrance Manager State
+    const [selectedCategoryForFragrance, setSelectedCategoryForFragrance] = useState<string>('');
+    const [categoryFragranceOptions, setCategoryFragranceOptions] = useState<any>({
+        enabled: true,
+        attar: {
+            enabled: true,
+            '3ml': { enabled: true, price: 199 },
+            '6ml': { enabled: true, price: 349 },
+            '9ml': { enabled: true, price: 549 }
+        },
+        perfume: {
+            enabled: true,
+            '30ml': { enabled: true, price: 549 },
+            '60ml': { enabled: true, price: 799 },
+            '100ml': { enabled: true, price: 1499 }
+        }
+    });
+    const [isCategoryFragranceModalOpen, setIsCategoryFragranceModalOpen] = useState(false);
+
+    // Global Store-Wide Fragrance Master State
+    const [globalFragranceOptions, setGlobalFragranceOptions] = useState<any>({
+        enabled: true,
+        attar: {
+            enabled: true,
+            '3ml': { enabled: true, price: 199 },
+            '6ml': { enabled: true, price: 349 },
+            '9ml': { enabled: true, price: 549 }
+        },
+        perfume: {
+            enabled: true,
+            '30ml': { enabled: true, price: 549 },
+            '60ml': { enabled: true, price: 799 },
+            '100ml': { enabled: true, price: 1499 }
+        }
+    });
+    const [isGlobalFragranceModalOpen, setIsGlobalFragranceModalOpen] = useState(false);
 
     useEffect(() => {
-        return onSnapshot(doc(db, 'settings', 'announcement'), (snap) => {
+        const unsubAnnouncement = onSnapshot(doc(db, 'settings', 'announcement'), (snap) => {
             if (snap.exists()) setAnnouncement(snap.data() as any);
         });
+        const unsubGlobalFragrance = onSnapshot(doc(db, 'settings', 'globalFragranceOptions'), (snap) => {
+            if (snap.exists()) setGlobalFragranceOptions(snap.data());
+        });
+        return () => {
+            unsubAnnouncement();
+            unsubGlobalFragrance();
+        };
     }, []);
+
+    const getStartingPrice = (prod: any) => {
+        if (!prod) return 199;
+        const opts = prod.fragranceOptions || {};
+        const attarPrices = [
+            opts.attar?.['3ml']?.price,
+            opts.attar?.['6ml']?.price,
+            opts.attar?.['9ml']?.price,
+        ].filter((p: any) => p && typeof p === 'number' && p > 0);
+        const perfumePrices = [
+            opts.perfume?.['30ml']?.price,
+            opts.perfume?.['60ml']?.price,
+            opts.perfume?.['100ml']?.price,
+        ].filter((p: any) => p && typeof p === 'number' && p > 0);
+        const allPrices = [...attarPrices, ...perfumePrices];
+        if (allPrices.length > 0) return Math.min(...allPrices);
+        return 199;
+    };
+
+    // Auto-sync: untick priceOnRequest for all fragrance products in Firestore
+    useEffect(() => {
+        if (products.length > 0) {
+            const productsToFix = products.filter(p => {
+                if (p.priceOnRequest !== true) return false;
+                const text = `${p.title || ''} ${p.material || ''} ${p.description || ''}`.toLowerCase();
+                const isFragranceMatch = text.includes('perfume') || text.includes('attar') || text.includes('fragrance');
+                const isOptionEnabled = p.fragranceOptions?.enabled === true;
+                return isFragranceMatch || isOptionEnabled;
+            });
+
+            if (productsToFix.length > 0) {
+                productsToFix.forEach(async (prod) => {
+                    try {
+                        await updateDoc(doc(db, "products", prod.id), {
+                            priceOnRequest: false,
+                            updatedAt: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        console.error("Auto-sync priceOnRequest error:", e);
+                    }
+                });
+            }
+        }
+    }, [products]);
 
     const handleSaveAnnouncement = async () => {
         setLoading(true);
@@ -228,14 +349,20 @@ export default function AdminDashboard() {
         });
     };
 
-    // Sync productImages when editingProduct changes
+    // Sync productImages and fragranceOptions when editingProduct changes
     useEffect(() => {
         if (editingProduct) {
             setProductImages(editingProduct.images || []);
             setSelectedCategoryIdsForm(editingProduct.category_ids || (editingProduct.category_id ? [editingProduct.category_id] : []));
+            if (editingProduct.fragranceOptions) {
+                setFragranceOptions(editingProduct.fragranceOptions);
+            } else {
+                setFragranceOptions(defaultFragranceState);
+            }
         } else {
             setProductImages([]);
             setSelectedCategoryIdsForm([]);
+            setFragranceOptions(defaultFragranceState);
         }
     }, [editingProduct]);
 
@@ -344,23 +471,43 @@ export default function AdminDashboard() {
             const deliveryInfo = formData.get('deliveryInfo') as string;
             const rating = Number(formData.get('rating') || 0);
             const reviewCount = Number(formData.get('reviewCount') || 0);
-            const showRating = formData.get('showRating') === 'on';
-            const priceOnRequest = formData.get('priceOnRequest') === 'on';
-            const codAvailable = formData.get('codAvailable') === 'on';
-            const hasFragranceOptions = formData.get('hasFragranceOptions') === 'on';
-            const rawFragranceOptions = (formData.get('fragranceOptions') as string) || '';
-            const fragranceOptions = rawFragranceOptions
-                ? rawFragranceOptions.split(',').map((s: string) => s.trim()).filter(Boolean)
-                : [];
+            const isFragrance = (title || '').toLowerCase().includes('perfume') ||
+                (title || '').toLowerCase().includes('attar') ||
+                (material || '').toLowerCase().includes('perfume') ||
+                (material || '').toLowerCase().includes('attar') ||
+                selectedCategoryIdsForm.some(id => {
+                    const c = categories.find(cat => cat.id === id);
+                    const name = (c?.name || '').toLowerCase();
+                    return name.includes('attar') || name.includes('perfume') || name.includes('unisex') || name.includes('traditional');
+                });
 
-            const productData = {
-                title, price, discount, category_id, category_ids, description,
-                gender, weight, material, hallmarkInfo, deliveryInfo,
-                rating, reviewCount, showRating, priceOnRequest, codAvailable,
-                hasFragranceOptions, fragranceOptions,
-                images: productImages.filter(url => url.trim() !== ''),
+            const showRating = formData.get('showRating') === 'on';
+            const priceOnRequest = isFragrance ? false : (formData.get('priceOnRequest') === 'on');
+            const codAvailable = formData.get('codAvailable') === 'on';
+
+            const rawProductData = {
+                title: title || '',
+                price: isNaN(price) ? 0 : price,
+                discount: isNaN(discount) ? 0 : discount,
+                category_id: category_id || '',
+                category_ids: category_ids || [],
+                description: description || '',
+                gender: gender || 'unisex',
+                weight: weight || '',
+                material: material || '',
+                hallmarkInfo: hallmarkInfo || '',
+                deliveryInfo: deliveryInfo || '',
+                rating: isNaN(rating) ? 0 : rating,
+                reviewCount: isNaN(reviewCount) ? 0 : reviewCount,
+                showRating,
+                priceOnRequest,
+                codAvailable,
+                fragranceOptions: fragranceOptions || defaultFragranceState,
+                images: productImages.filter(url => url && url.trim() !== ''),
                 updatedAt: new Date().toISOString()
             };
+
+            const productData = cleanFirestoreData(rawProductData);
 
             if (editingProduct?.id) {
                 await updateDoc(doc(db, "products", editingProduct.id), productData);
@@ -375,7 +522,109 @@ export default function AdminDashboard() {
 
             setEditingProduct(null);
         } catch (err: any) {
-            alert(err.message);
+            console.error("Error saving product:", err);
+            alert(`Error saving product: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Category Fragrance Bulk Update Handler ---
+    const handleApplyCategoryFragranceOptions = async () => {
+        if (!selectedCategoryForFragrance) {
+            alert('Please select a category first.');
+            return;
+        }
+        const targetCat = categories.find(c => c.id === selectedCategoryForFragrance);
+        if (!targetCat) return;
+
+        if (!window.confirm(`Apply fragrance options & prices to ALL products in category "${targetCat.name}"?`)) return;
+
+        setLoading(true);
+        try {
+            const childIds = categories.filter(c => c.parentId === selectedCategoryForFragrance).map(c => c.id);
+            const targetCatIds = [selectedCategoryForFragrance, ...childIds];
+
+            const matchingProducts = products.filter(p => {
+                const pCats = p.category_ids || (p.category_id ? [p.category_id] : []);
+                return pCats.some((id: string) => targetCatIds.includes(id));
+            });
+
+            if (matchingProducts.length === 0) {
+                alert(`No products found in category "${targetCat.name}".`);
+                setLoading(false);
+                return;
+            }
+
+            const cleanedOptions = cleanFirestoreData(categoryFragranceOptions);
+
+            for (const prod of matchingProducts) {
+                await updateDoc(doc(db, "products", prod.id), {
+                    fragranceOptions: cleanedOptions,
+                    priceOnRequest: false,
+                    updatedAt: new Date().toISOString()
+                });
+            }
+
+            alert(`Successfully updated fragrance options & prices for ${matchingProducts.length} products in "${targetCat.name}"!`);
+            setIsCategoryFragranceModalOpen(false);
+        } catch (err: any) {
+            console.error("Error updating category fragrance options:", err);
+            alert(`Error updating category: ${err.message}`);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // --- Global Store-Wide Fragrance Master Update Handler ---
+    const handleApplyGlobalFragranceOptions = async () => {
+        if (!window.confirm("Update fragrance variant prices store-wide for ALL perfumes and attars across the ENTIRE store?")) return;
+
+        setLoading(true);
+        try {
+            const cleanedOptions = cleanFirestoreData(globalFragranceOptions);
+
+            // 1. Save to settings doc
+            await setDoc(doc(db, 'settings', 'globalFragranceOptions'), {
+                ...cleanedOptions,
+                updatedAt: new Date().toISOString()
+            });
+
+            // 2. Identify all fragrance categories (Attar, Perfume, Unisex, Traditional, Men's Collection, etc.)
+            const fragranceCats = categories.filter(c => {
+                const name = (c.name || '').toLowerCase();
+                return name.includes('attar') || name.includes('perfume') || name.includes('unisex') || name.includes('traditional') || name.includes("men's collection");
+            });
+
+            const fragranceCatIds = fragranceCats.map(c => c.id);
+
+            // Find all matching products or products with fragranceOptions configured
+            const matchingProducts = products.filter(p => {
+                const pCats = p.category_ids || (p.category_id ? [p.category_id] : []);
+                const isCatMatch = pCats.some((id: string) => fragranceCatIds.includes(id));
+                const isTitleMatch = (p.title || '').toLowerCase().includes('perfume') || (p.title || '').toLowerCase().includes('attar');
+                const isOptionEnabled = p.fragranceOptions?.enabled === true;
+                return isCatMatch || isTitleMatch || isOptionEnabled;
+            });
+
+            let updatedCount = 0;
+            for (const prod of matchingProducts) {
+                await updateDoc(doc(db, "products", prod.id), {
+                    fragranceOptions: {
+                        ...cleanedOptions,
+                        enabled: true
+                    },
+                    priceOnRequest: false,
+                    updatedAt: new Date().toISOString()
+                });
+                updatedCount++;
+            }
+
+            alert(`Global Master Fragrance Prices updated and applied to ${updatedCount} products store-wide!`);
+            setIsGlobalFragranceModalOpen(false);
+        } catch (err: any) {
+            console.error("Error updating global fragrance options:", err);
+            alert(`Error updating global prices: ${err.message}`);
         } finally {
             setLoading(false);
         }
@@ -1126,26 +1375,48 @@ export default function AdminDashboard() {
                     {/* Quick Action Button */}
                     <div className="flex gap-4">
                         {activeTab === 'products' && (
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setEditingProduct({ title: '', price: 0, images: [], category_ids: [], showRating: true, codAvailable: false })}
-                                className="px-6 py-4 bg-charcoal text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-charcoal/10"
-                            >
-                                <Plus size={16} />
-                                Add Piece
-                            </motion.button>
+                            <div className="flex gap-3">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setIsGlobalFragranceModalOpen(true)}
+                                    className="px-6 py-4 gold-gradient text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-gold/20"
+                                >
+                                    <Sparkles size={16} />
+                                    Global Fragrance Master
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setEditingProduct({ title: '', price: 0, images: [], category_ids: [], showRating: true, codAvailable: false })}
+                                    className="px-6 py-4 bg-charcoal text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-charcoal/10"
+                                >
+                                    <Plus size={16} />
+                                    Add Piece
+                                </motion.button>
+                            </div>
                         )}
                         {activeTab === 'categories' && (
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setIsCategoryModalOpen(true)}
-                                className="px-6 py-4 bg-charcoal text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-charcoal/10"
-                            >
-                                <Plus size={16} />
-                                Add Category
-                            </motion.button>
+                            <div className="flex gap-3">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setIsCategoryModalOpen(true)}
+                                    className="px-6 py-4 bg-charcoal text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-charcoal/10"
+                                >
+                                    <Plus size={16} />
+                                    Add Category
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setIsCategoryFragranceModalOpen(true)}
+                                    className="px-6 py-4 gold-gradient text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-xl shadow-gold/20"
+                                >
+                                    <Sparkles size={16} />
+                                    Category Fragrance Prices
+                                </motion.button>
+                            </div>
                         )}
                         {activeTab === 'banners' && (
                             <motion.button
@@ -1304,7 +1575,12 @@ export default function AdminDashboard() {
                                                         <span className="inline-block px-3 py-1 bg-charcoal/5 border border-charcoal/10 rounded-full text-[9px] font-bold uppercase text-charcoal/60 tracking-wider">{p.material || 'Generic'}</span>
                                                     </td>
                                                     <td className="px-8 py-5 font-serif font-bold text-charcoal">
-                                                        {p.priceOnRequest ? (
+                                                        {(p.fragranceOptions?.enabled !== false || (p.title || '').toLowerCase().includes('perfume') || (p.title || '').toLowerCase().includes('attar')) ? (
+                                                            <div className="flex flex-col">
+                                                                <span className="text-xs font-bold text-gold">From ₹{getStartingPrice(p).toLocaleString()}</span>
+                                                                <span className="text-[9px] font-sans text-charcoal/40 font-normal">Variants Active</span>
+                                                            </div>
+                                                        ) : p.priceOnRequest ? (
                                                             <span className="text-[10px] font-bold tracking-wider text-green-600 uppercase">On Request</span>
                                                         ) : (
                                                             `₹${(p.price || 0).toLocaleString()}`
@@ -1488,13 +1764,6 @@ export default function AdminDashboard() {
                                                                     <div className="min-w-0">
                                                                         <div className="text-xs font-bold truncate max-w-[150px]" title={item.productTitle}>{item.productTitle}</div>
                                                                         <div className="text-[10px] text-gold font-medium mt-0.5">₹{(item.price || 0).toLocaleString()}</div>
-                                                                        {(item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption) && (
-                                                                            <div className="mt-1">
-                                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold rounded-md text-[9px] font-bold">
-                                                                                    <Sparkles size={10} /> {item.selectedFragrance || order.shippingAddress?.selectedFragrance || order.selectedFragrance || order.fragranceOption}
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
                                                                     </div>
                                                                 </div>
                                                             ))}
@@ -2053,7 +2322,7 @@ export default function AdminDashboard() {
                                     <input
                                         type="checkbox"
                                         name="priceOnRequest"
-                                        defaultChecked={editingProduct.priceOnRequest}
+                                        defaultChecked={editingProduct ? Boolean(editingProduct.priceOnRequest) : false}
                                         className="rounded text-gold focus:ring-gold"
                                     />
                                     <label className="text-xs font-bold uppercase text-charcoal/60 tracking-wider">Price on Request</label>
@@ -2068,48 +2337,155 @@ export default function AdminDashboard() {
                                     <label className="text-xs font-bold uppercase text-charcoal/60 tracking-wider">Cash on Delivery (COD) Available</label>
                                 </div>
 
-                                <div className="flex items-center gap-2 p-2 col-span-2 sm:col-span-1">
-                                    <input
-                                        type="checkbox"
-                                        name="hasFragranceOptions"
-                                        id="hasFragranceOptions"
-                                        defaultChecked={editingProduct.hasFragranceOptions}
-                                        className="rounded text-gold focus:ring-gold"
-                                    />
-                                    <label htmlFor="hasFragranceOptions" className="text-xs font-bold uppercase text-charcoal/60 tracking-wider cursor-pointer">
-                                        Enable Fragrance / Perfume Options
-                                    </label>
-                                </div>
-
-                                <div className="col-span-2 space-y-2 bg-gold/5 p-4 rounded-2xl border border-gold/10">
-                                    <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-bold uppercase text-charcoal/60 tracking-wider">
-                                            Fragrance / Perfume Options (Comma-Separated)
+                                {/* Fragrance Variant Settings Box */}
+                                <div className="col-span-2 p-5 bg-gold/5 border border-gold/20 rounded-2xl space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-sm text-charcoal">Fragrance Variant Settings</h4>
+                                            <p className="text-[10px] text-charcoal/50">Configure Attar (3ml, 6ml, 9ml) & Perfume (30ml, 60ml, 100ml) pricing</p>
+                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={fragranceOptions?.enabled || false}
+                                                onChange={(e) => setFragranceOptions({ ...fragranceOptions, enabled: e.target.checked })}
+                                                className="w-4 h-4 rounded text-gold focus:ring-gold"
+                                            />
+                                            <span className="text-xs font-bold text-gold uppercase tracking-wider">Enable Fragrance Options</span>
                                         </label>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => {
-                                                const container = e.currentTarget.closest('.space-y-2');
-                                                const input = container?.querySelector('input');
-                                                if (input) {
-                                                    input.value = "Vanilla, Chocolate, Sandalwood, Baccarat Rouge 540, Tobacco Vanilla, Lost Cherry, Mitti Attar, Kesar Chandan";
-                                                }
-                                            }}
-                                            className="text-[9px] font-bold text-gold hover:underline cursor-pointer"
-                                        >
-                                            + Load Default Options
-                                        </button>
                                     </div>
-                                    <input
-                                        type="text"
-                                        name="fragranceOptions"
-                                        defaultValue={Array.isArray(editingProduct.fragranceOptions) ? editingProduct.fragranceOptions.join(', ') : (editingProduct.fragranceOptions || '')}
-                                        className="w-full bg-white border border-gold/15 rounded-xl p-3 focus:border-gold outline-none text-xs"
-                                        placeholder="e.g. Vanilla, Chocolate, Sandalwood, Baccarat Rouge 540"
-                                    />
-                                    <p className="text-[9px] text-charcoal/40 italic">
-                                        These options will be presented to the user to choose from when placing an order.
-                                    </p>
+
+                                    {fragranceOptions?.enabled && (
+                                        <div className="space-y-6 pt-3 border-t border-gold/15">
+                                            {/* Attar Configuration */}
+                                            <div className="space-y-3 bg-white p-4 rounded-xl border border-gold/15">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider flex items-center gap-1.5">
+                                                        💧 Attar (Pure raw without alcohol)
+                                                    </span>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={fragranceOptions.attar?.enabled !== false}
+                                                            onChange={(e) => setFragranceOptions({
+                                                                ...fragranceOptions,
+                                                                attar: { ...fragranceOptions.attar, enabled: e.target.checked }
+                                                            })}
+                                                            className="rounded text-gold focus:ring-gold"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-charcoal/60">Enable Attar</span>
+                                                    </label>
+                                                </div>
+                                                {fragranceOptions.attar?.enabled !== false && (
+                                                    <div className="grid grid-cols-3 gap-3 pt-2">
+                                                        {['3ml', '6ml', '9ml'].map((size) => (
+                                                            <div key={size} className="space-y-1">
+                                                                <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                    <span>{size} Price (₹)</span>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={fragranceOptions.attar?.[size]?.enabled !== false}
+                                                                        onChange={(e) => setFragranceOptions({
+                                                                            ...fragranceOptions,
+                                                                            attar: {
+                                                                                ...fragranceOptions.attar,
+                                                                                [size]: {
+                                                                                    ...fragranceOptions.attar?.[size],
+                                                                                    enabled: e.target.checked,
+                                                                                    price: fragranceOptions.attar?.[size]?.price || 0
+                                                                                }
+                                                                            }
+                                                                        })}
+                                                                        className="rounded text-gold focus:ring-gold"
+                                                                    />
+                                                                </div>
+                                                                <input
+                                                                    type="number"
+                                                                    value={fragranceOptions.attar?.[size]?.price || 0}
+                                                                    disabled={fragranceOptions.attar?.[size]?.enabled === false}
+                                                                    onChange={(e) => setFragranceOptions({
+                                                                        ...fragranceOptions,
+                                                                        attar: {
+                                                                            ...fragranceOptions.attar,
+                                                                            [size]: {
+                                                                                ...fragranceOptions.attar?.[size],
+                                                                                price: Number(e.target.value)
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="w-full bg-zinc-50 border border-gold/10 rounded-xl p-2 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none disabled:opacity-40"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Perfume Configuration */}
+                                            <div className="space-y-3 bg-white p-4 rounded-xl border border-gold/15">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-xs font-bold text-charcoal uppercase tracking-wider flex items-center gap-1.5">
+                                                        💨 Perfume (35% Concentrated)
+                                                    </span>
+                                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={fragranceOptions.perfume?.enabled !== false}
+                                                            onChange={(e) => setFragranceOptions({
+                                                                ...fragranceOptions,
+                                                                perfume: { ...fragranceOptions.perfume, enabled: e.target.checked }
+                                                            })}
+                                                            className="rounded text-gold focus:ring-gold"
+                                                        />
+                                                        <span className="text-[10px] font-bold text-charcoal/60">Enable Perfume</span>
+                                                    </label>
+                                                </div>
+                                                {fragranceOptions.perfume?.enabled !== false && (
+                                                    <div className="grid grid-cols-3 gap-3 pt-2">
+                                                        {['30ml', '60ml', '100ml'].map((size) => (
+                                                            <div key={size} className="space-y-1">
+                                                                <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                    <span>{size} Price (₹)</span>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={fragranceOptions.perfume?.[size]?.enabled !== false}
+                                                                        onChange={(e) => setFragranceOptions({
+                                                                            ...fragranceOptions,
+                                                                            perfume: {
+                                                                                ...fragranceOptions.perfume,
+                                                                                [size]: {
+                                                                                    ...fragranceOptions.perfume?.[size],
+                                                                                    enabled: e.target.checked,
+                                                                                    price: fragranceOptions.perfume?.[size]?.price || 0
+                                                                                }
+                                                                            }
+                                                                        })}
+                                                                        className="rounded text-gold focus:ring-gold"
+                                                                    />
+                                                                </div>
+                                                                <input
+                                                                    type="number"
+                                                                    value={fragranceOptions.perfume?.[size]?.price || 0}
+                                                                    disabled={fragranceOptions.perfume?.[size]?.enabled === false}
+                                                                    onChange={(e) => setFragranceOptions({
+                                                                        ...fragranceOptions,
+                                                                        perfume: {
+                                                                            ...fragranceOptions.perfume,
+                                                                            [size]: {
+                                                                                ...fragranceOptions.perfume?.[size],
+                                                                                price: Number(e.target.value)
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="w-full bg-zinc-50 border border-gold/10 rounded-xl p-2 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none disabled:opacity-40"
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="col-span-2 space-y-4 pt-4 border-t border-gold/5">
@@ -2571,6 +2947,441 @@ export default function AdminDashboard() {
                     <span className="text-[10px] font-bold uppercase tracking-widest">Exit</span>
                 </button>
             </div>
+
+            {/* Category Fragrance Manager Modal */}
+            <AnimatePresence>
+                {isCategoryFragranceModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white border border-gold/30 w-full max-w-2xl rounded-[32px] p-6 md:p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto"
+                        >
+                            <button
+                                type="button"
+                                onClick={() => setIsCategoryFragranceModalOpen(false)}
+                                className="absolute top-6 right-6 text-charcoal/40 hover:text-gold transition-colors p-2"
+                            >
+                                <X size={20} />
+                            </button>
+
+                            <div className="mb-6">
+                                <span className="px-3 py-1 bg-gold/10 text-gold font-bold text-[10px] uppercase tracking-widest rounded-full">
+                                    Bulk Category Manager
+                                </span>
+                                <h2 className="text-2xl font-serif font-bold text-charcoal mt-1">
+                                    Category Fragrance Options & Prices
+                                </h2>
+                                <p className="text-xs text-charcoal/50">
+                                    Turn ON/OFF fragrance options and set default sizes & prices for all products in a specific category.
+                                </p>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Category Selector */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase text-charcoal/60">Select Target Category</label>
+                                    <select
+                                        value={selectedCategoryForFragrance}
+                                        onChange={(e) => setSelectedCategoryForFragrance(e.target.value)}
+                                        className="w-full bg-zinc-50 border border-gold/20 rounded-2xl p-4 text-sm font-bold text-charcoal outline-none focus:border-gold"
+                                    >
+                                        <option value="">— Select a Category —</option>
+                                        {categories.map(c => (
+                                            <option key={c.id} value={c.id}>
+                                                {c.parentId ? `└— ${c.name}` : c.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Master Enable Toggle */}
+                                <div className="p-4 bg-gold/5 border border-gold/20 rounded-2xl flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-bold text-charcoal">Enable Fragrance Options in Category</p>
+                                        <p className="text-[10px] text-charcoal/50">Master switch to turn ON/OFF for all items in this category</p>
+                                    </div>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={categoryFragranceOptions.enabled}
+                                            onChange={(e) => setCategoryFragranceOptions({ ...categoryFragranceOptions, enabled: e.target.checked })}
+                                            className="w-5 h-5 rounded text-gold focus:ring-gold"
+                                        />
+                                        <span className="text-xs font-bold text-gold uppercase">{categoryFragranceOptions.enabled ? 'ON' : 'OFF'}</span>
+                                    </label>
+                                </div>
+
+                                {categoryFragranceOptions.enabled && (
+                                    <div className="space-y-4">
+                                        {/* Attar Configuration */}
+                                        <div className="bg-zinc-50 p-4 rounded-2xl border border-gold/15 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                                                    💧 Attar (Pure raw without alcohol)
+                                                </span>
+                                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={categoryFragranceOptions.attar?.enabled !== false}
+                                                        onChange={(e) => setCategoryFragranceOptions({
+                                                            ...categoryFragranceOptions,
+                                                            attar: { ...categoryFragranceOptions.attar, enabled: e.target.checked }
+                                                        })}
+                                                        className="rounded text-gold focus:ring-gold"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-charcoal/60">Enable Attar</span>
+                                                </label>
+                                            </div>
+                                            {categoryFragranceOptions.attar?.enabled !== false && (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['3ml', '6ml', '9ml'].map((size) => (
+                                                        <div key={size} className="space-y-1">
+                                                            <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                <span>{size} (₹)</span>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={categoryFragranceOptions.attar?.[size]?.enabled !== false}
+                                                                    onChange={(e) => setCategoryFragranceOptions({
+                                                                        ...categoryFragranceOptions,
+                                                                        attar: {
+                                                                            ...categoryFragranceOptions.attar,
+                                                                            [size]: {
+                                                                                ...categoryFragranceOptions.attar?.[size],
+                                                                                enabled: e.target.checked,
+                                                                                price: categoryFragranceOptions.attar?.[size]?.price || 0
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="rounded text-gold focus:ring-gold"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                value={categoryFragranceOptions.attar?.[size]?.price ?? 0}
+                                                                disabled={categoryFragranceOptions.attar?.[size]?.enabled === false}
+                                                                onChange={(e) => setCategoryFragranceOptions({
+                                                                    ...categoryFragranceOptions,
+                                                                    attar: {
+                                                                        ...categoryFragranceOptions.attar,
+                                                                        [size]: {
+                                                                            ...categoryFragranceOptions.attar?.[size],
+                                                                            price: Number(e.target.value)
+                                                                        }
+                                                                    }
+                                                                })}
+                                                                className="w-full bg-white border border-gold/10 rounded-xl p-2 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Perfume Configuration */}
+                                        <div className="bg-zinc-50 p-4 rounded-2xl border border-gold/15 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                                                    💨 Perfume (35% Concentrated)
+                                                </span>
+                                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={categoryFragranceOptions.perfume?.enabled !== false}
+                                                        onChange={(e) => setCategoryFragranceOptions({
+                                                            ...categoryFragranceOptions,
+                                                            perfume: { ...categoryFragranceOptions.perfume, enabled: e.target.checked }
+                                                        })}
+                                                        className="rounded text-gold focus:ring-gold"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-charcoal/60">Enable Perfume</span>
+                                                </label>
+                                            </div>
+                                            {categoryFragranceOptions.perfume?.enabled !== false && (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['30ml', '60ml', '100ml'].map((size) => (
+                                                        <div key={size} className="space-y-1">
+                                                            <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                <span>{size} (₹)</span>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={categoryFragranceOptions.perfume?.[size]?.enabled !== false}
+                                                                    onChange={(e) => setCategoryFragranceOptions({
+                                                                        ...categoryFragranceOptions,
+                                                                        perfume: {
+                                                                            ...categoryFragranceOptions.perfume,
+                                                                            [size]: {
+                                                                                ...categoryFragranceOptions.perfume?.[size],
+                                                                                enabled: e.target.checked,
+                                                                                price: categoryFragranceOptions.perfume?.[size]?.price || 0
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="rounded text-gold focus:ring-gold"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                value={categoryFragranceOptions.perfume?.[size]?.price ?? 0}
+                                                                disabled={categoryFragranceOptions.perfume?.[size]?.enabled === false}
+                                                                onChange={(e) => setCategoryFragranceOptions({
+                                                                    ...categoryFragranceOptions,
+                                                                    perfume: {
+                                                                        ...categoryFragranceOptions.perfume,
+                                                                        [size]: {
+                                                                            ...categoryFragranceOptions.perfume?.[size],
+                                                                            price: Number(e.target.value)
+                                                                        }
+                                                                    }
+                                                                })}
+                                                                className="w-full bg-white border border-gold/10 rounded-xl p-2 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Buttons for Category Modal */}
+                                <div className="pt-2 flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsCategoryFragranceModalOpen(false)}
+                                        className="flex-1 py-4 border border-gold/20 text-charcoal font-bold rounded-2xl text-xs hover:bg-gold/5 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleApplyCategoryFragranceOptions}
+                                        disabled={loading}
+                                        className="flex-2 py-4 gold-gradient text-white font-bold rounded-2xl text-xs shadow-lg shadow-gold/20 hover:shadow-xl transition-all disabled:opacity-50 shimmer uppercase tracking-wider"
+                                    >
+                                        {loading ? 'Applying...' : 'Apply to Category'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Global Fragrance Price Master Modal */}
+            <AnimatePresence>
+                {isGlobalFragranceModalOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-sm"
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20 }}
+                            animate={{ scale: 1, y: 0 }}
+                            exit={{ scale: 0.9, y: 20 }}
+                            className="bg-white border-2 border-gold w-full max-w-2xl rounded-[32px] p-6 md:p-8 relative shadow-2xl max-h-[90vh] overflow-y-auto"
+                        >
+                            <button
+                                type="button"
+                                onClick={() => setIsGlobalFragranceModalOpen(false)}
+                                className="absolute top-6 right-6 text-charcoal/40 hover:text-gold transition-colors p-2"
+                            >
+                                <X size={20} />
+                            </button>
+
+                            <div className="mb-6">
+                                <span className="px-3 py-1 gold-gradient text-white font-bold text-[10px] uppercase tracking-widest rounded-full shadow-md">
+                                    Global Master Control
+                                </span>
+                                <h2 className="text-2xl font-serif font-bold text-charcoal mt-2">
+                                    Global Fragrance Price Master
+                                </h2>
+                                <p className="text-xs text-charcoal/60">
+                                    Setting prices here will update variant prices for <strong>ALL Perfumes & Attars across the ENTIRE store</strong>.
+                                </p>
+                            </div>
+
+                            <div className="space-y-6">
+                                {/* Master Enable Toggle */}
+                                <div className="p-4 bg-gold/10 border border-gold/30 rounded-2xl flex items-center justify-between shadow-xs">
+                                    <div>
+                                        <p className="text-sm font-bold text-charcoal">Enable Fragrance Options Store-Wide</p>
+                                        <p className="text-[10px] text-charcoal/60">Master switch for all perfumes & attars in store</p>
+                                    </div>
+                                    <label className="flex items-center gap-2 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={globalFragranceOptions.enabled}
+                                            onChange={(e) => setGlobalFragranceOptions({ ...globalFragranceOptions, enabled: e.target.checked })}
+                                            className="w-5 h-5 rounded text-gold focus:ring-gold"
+                                        />
+                                        <span className="text-xs font-bold text-gold uppercase">{globalFragranceOptions.enabled ? 'ON' : 'OFF'}</span>
+                                    </label>
+                                </div>
+
+                                {globalFragranceOptions.enabled && (
+                                    <div className="space-y-4">
+                                        {/* Attar Configuration */}
+                                        <div className="bg-luxury-white p-4 rounded-2xl border border-gold/20 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-charcoal uppercase tracking-wider flex items-center gap-1.5">
+                                                    💧 Global Attar Prices (Pure raw without alcohol)
+                                                </span>
+                                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={globalFragranceOptions.attar?.enabled !== false}
+                                                        onChange={(e) => setGlobalFragranceOptions({
+                                                            ...globalFragranceOptions,
+                                                            attar: { ...globalFragranceOptions.attar, enabled: e.target.checked }
+                                                        })}
+                                                        className="rounded text-gold focus:ring-gold"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-charcoal/60">Enable Attar</span>
+                                                </label>
+                                            </div>
+                                            {globalFragranceOptions.attar?.enabled !== false && (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['3ml', '6ml', '9ml'].map((size) => (
+                                                        <div key={size} className="space-y-1">
+                                                            <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                <span>{size} (₹)</span>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={globalFragranceOptions.attar?.[size]?.enabled !== false}
+                                                                    onChange={(e) => setGlobalFragranceOptions({
+                                                                        ...globalFragranceOptions,
+                                                                        attar: {
+                                                                            ...globalFragranceOptions.attar,
+                                                                            [size]: {
+                                                                                ...globalFragranceOptions.attar?.[size],
+                                                                                enabled: e.target.checked,
+                                                                                price: globalFragranceOptions.attar?.[size]?.price || 0
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="rounded text-gold focus:ring-gold"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                value={globalFragranceOptions.attar?.[size]?.price ?? 0}
+                                                                disabled={globalFragranceOptions.attar?.[size]?.enabled === false}
+                                                                onChange={(e) => setGlobalFragranceOptions({
+                                                                    ...globalFragranceOptions,
+                                                                    attar: {
+                                                                        ...globalFragranceOptions.attar,
+                                                                        [size]: {
+                                                                            ...globalFragranceOptions.attar?.[size],
+                                                                            price: Number(e.target.value)
+                                                                        }
+                                                                    }
+                                                                })}
+                                                                className="w-full bg-white border border-gold/20 rounded-xl p-2.5 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Perfume Configuration */}
+                                        <div className="bg-luxury-white p-4 rounded-2xl border border-gold/20 space-y-3">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-charcoal uppercase tracking-wider flex items-center gap-1.5">
+                                                    💨 Global Perfume Prices (35% Concentrated)
+                                                </span>
+                                                <label className="flex items-center gap-1.5 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={globalFragranceOptions.perfume?.enabled !== false}
+                                                        onChange={(e) => setGlobalFragranceOptions({
+                                                            ...globalFragranceOptions,
+                                                            perfume: { ...globalFragranceOptions.perfume, enabled: e.target.checked }
+                                                        })}
+                                                        className="rounded text-gold focus:ring-gold"
+                                                    />
+                                                    <span className="text-[10px] font-bold text-charcoal/60">Enable Perfume</span>
+                                                </label>
+                                            </div>
+                                            {globalFragranceOptions.perfume?.enabled !== false && (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['30ml', '60ml', '100ml'].map((size) => (
+                                                        <div key={size} className="space-y-1">
+                                                            <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
+                                                                <span>{size} (₹)</span>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={globalFragranceOptions.perfume?.[size]?.enabled !== false}
+                                                                    onChange={(e) => setGlobalFragranceOptions({
+                                                                        ...globalFragranceOptions,
+                                                                        perfume: {
+                                                                            ...globalFragranceOptions.perfume,
+                                                                            [size]: {
+                                                                                ...globalFragranceOptions.perfume?.[size],
+                                                                                enabled: e.target.checked,
+                                                                                price: globalFragranceOptions.perfume?.[size]?.price || 0
+                                                                            }
+                                                                        }
+                                                                    })}
+                                                                    className="rounded text-gold focus:ring-gold"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="number"
+                                                                value={globalFragranceOptions.perfume?.[size]?.price ?? 0}
+                                                                disabled={globalFragranceOptions.perfume?.[size]?.enabled === false}
+                                                                onChange={(e) => setGlobalFragranceOptions({
+                                                                    ...globalFragranceOptions,
+                                                                    perfume: {
+                                                                        ...globalFragranceOptions.perfume,
+                                                                        [size]: {
+                                                                            ...globalFragranceOptions.perfume?.[size],
+                                                                            price: Number(e.target.value)
+                                                                        }
+                                                                    }
+                                                                })}
+                                                                className="w-full bg-white border border-gold/20 rounded-xl p-2.5 text-xs font-serif font-bold text-charcoal focus:border-gold outline-none"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Action Button */}
+                                <div className="pt-2 flex gap-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsGlobalFragranceModalOpen(false)}
+                                        className="flex-1 py-4 border border-gold/20 text-charcoal font-bold rounded-2xl text-xs hover:bg-gold/5 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleApplyGlobalFragranceOptions}
+                                        disabled={loading}
+                                        className="flex-2 py-4 gold-gradient text-white font-bold rounded-2xl text-xs shadow-lg shadow-gold/20 hover:shadow-xl transition-all disabled:opacity-50 shimmer uppercase tracking-wider"
+                                    >
+                                        {loading ? 'Updating Store-Wide...' : 'Apply Store-Wide to All Products'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Real-time Order Toast Notifications */}
             <div className="fixed bottom-24 md:bottom-8 right-6 z-[200] space-y-4 max-w-sm w-full pointer-events-none font-sans">

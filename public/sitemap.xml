@@ -5,37 +5,37 @@
   <!-- Static Main Routes -->
   <url>
     <loc>https://aadityasaura.com</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/collections</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/about</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/gallery</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/contact</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/login</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -167,19 +167,6 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
-    <loc>https://aadityasaura.com/product/2zbljARe5Ordd0vC02X0</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1uROZP8jN4T03Hhxt_5xKjD7YDft4qiL-=w1000</image:loc>
-      <image:title>Aaditya&apos;s Aura Arabian Rose Perfume</image:title>
-      <image:caption>The timeless beauty of the rose, elevated with Middle Eastern richness. Arabian Rose is a deep, velvety floral fragrance that is both romantic and powerful.
-
-✨ </image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://aadityasaura.com/product/2zomBK2NYmjipbRP9pwZ</loc>
     <lastmod>2026-09-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -281,6 +268,17 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/5GGe18FdJ4v1fKjXec20</loc>
+    <lastmod>2026-09-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1PmRo0RyeBarKYP7Q71JKhoIybq2AZJsg=w1000</image:loc>
+      <image:title>Jaguar — Bold. Refined. Unforgettable.</image:title>
+      <image:caption>A bold and sophisticated fragrance for those who carry confidence effortlessly. Jaguar blends a refined, masculine character with a smooth and captivating aroma</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/5MTe2yW70R41WXGSgmal</loc>
     <lastmod>2026-09-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -295,6 +293,17 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/5YVOISylCpTLdXKqJqeo</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/17NqwrvwXkbGNpAFu-lnnAT_89rGxA9fp=w1000</image:loc>
+      <image:title>Royal Oud Rose</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Royal Oud Rose. Long-lasting and exquisite.</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/5xGiTBE1drQpqH55vFcz</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -303,6 +312,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1dYROg9MvQlJO4gZRCKx_eUtgQ6zPKJMN=w1000</image:loc>
       <image:title>Elegant 1g Gold Mangalsutra Pendent</image:title>
       <image:caption>A delicate and meaningful pendent featuring traditional black bead accents and a high-quality 1-gram gold finish.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/67QFODuomhPIfq6tasAS</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1wsqqnOXI9Aq2xYGT7T5mo7HW7UYXScPB=w1000</image:loc>
+      <image:title>Royal Saffron</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Royal Saffron. Long-lasting and exquisite.</image:caption>
     </image:image>
   </url>
   <url>
@@ -384,7 +404,7 @@ Inspired by Weekend by Burberry.</image:caption>
   </url>
   <url>
     <loc>https://aadityasaura.com/product/7juffCmNUkmFv14rz1tc</loc>
-    <lastmod>2026-09-08</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -468,6 +488,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1Fg530ljvyj70CO4oFVCNGftix6FeVjE2=w1000</image:loc>
       <image:title>Royal Heritage Silver Payal</image:title>
       <image:caption>A stunning handcrafted silver anklet featuring intricate traditional patterns. Designed for those who appreciate timeless elegance and heritage craftsmanship.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/98zLCeEhqRhwWEQHJqLi</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1LQj5hpfFXWJ42btM37dQU7dHWXTyqQZH=w1000</image:loc>
+      <image:title>Aqua Di Gio</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Aqua Di Gio. Long-lasting and exquisite.</image:caption>
     </image:image>
   </url>
   <url>
@@ -600,6 +631,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1NrdfPSkWyJ8Z3lx-NpUylKl0uH3M8Rqg=w1000</image:loc>
       <image:title>Sparking Stone-Studded Silver Toe Rings</image:title>
       <image:caption>Elegant silver bichiya accented with sparkling stones for a touch of brilliance. These adjustable rings are designed for both comfort and style.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/CAM9vqFHwo6uNsbCvxMr</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1NDXpcI134AdOVPYIy4aBhRNeWqRxxD0c=w1000</image:loc>
+      <image:title>Flora</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Flora. Long-lasting and exquisite.</image:caption>
     </image:image>
   </url>
   <url>
@@ -809,17 +851,6 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/19jYZSy3F-7EAkqiBu0JU_ETnCrf-qmvj=w1000</image:loc>
       <image:title>Vintage Brilliance Gold Ring</image:title>
       <image:caption>A vintage-inspired gold ring with intricate handcrafted detailing surrounding a sparkling clear gemstone. Timeless elegance that never goes out of style.</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://aadityasaura.com/product/EnCr7D89rLjGvSXE7bPf</loc>
-    <lastmod>2026-09-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1mI01QRYXkUtLAai9fEo_1rEspSS-uJBv=w1000</image:loc>
-      <image:title>Arabian Rose</image:title>
-      <image:caption>Arabian Rose is a captivating fragrance inspired by the timeless beauty and mystery of the Arabian world. Rich, velvety rose blends with warm, sensual notes to </image:caption>
     </image:image>
   </url>
   <url>
@@ -1541,6 +1572,17 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/QPEdgxkPm1yhqaj35Jxv</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1IwbH1rMpyihVDtcln32Ay0MXTP2DwM4F=w1000</image:loc>
+      <image:title>Arabian Rose</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Arabian Rose. Long-lasting and exquisite.</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/QPc0R7rVTzG1ATqYPJvL</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -2102,17 +2144,6 @@ Inspired by Azzaro Chrome.</image:caption>
     </image:image>
   </url>
   <url>
-    <loc>https://aadityasaura.com/product/Z4ZulnywtsdD0WphGmm0</loc>
-    <lastmod>2026-09-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1xZWsUHItD7UyjlzSeL5En6_ZYg6eFGA3=w1000</image:loc>
-      <image:title>Aaditya&apos;s Aura Royal Saffron Perfume</image:title>
-      <image:caption>An imperial fragrance celebrating saffron—the red gold—exuding majestic splendor and warmth. Available as 12 ml concentrated Attar and 50 ml Eau De Parfum. &quot;The</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://aadityasaura.com/product/Z93xLtveUpjt6jVKbNI3</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -2329,19 +2360,6 @@ Aura: Step into effortless elegance with Aura — a signature scent that defines
     </image:image>
   </url>
   <url>
-    <loc>https://aadityasaura.com/product/cZQUZrbT1FnqAPVRgIRg</loc>
-    <lastmod>2026-09-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1RutDcFei5gqN22NNjUJu1f4n9NtPB0x3=w1000</image:loc>
-      <image:title>Royal Oud Rose</image:title>
-      <image:caption>Where Royal Oud Meets the Elegance of Rose.
-
-Royal Oud Rose is a luxurious fragrance crafted for those who appreciate timeless sophistication. The deep, warm ch</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://aadityasaura.com/product/cp1YFPUKzXsNOXqEXlSc</loc>
     <lastmod>2026-09-07</lastmod>
     <changefreq>weekly</changefreq>
@@ -2360,7 +2378,7 @@ Royal Oud Rose is a luxurious fragrance crafted for those who appreciate timeles
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1qebMUp4PIMIXCM58cHqZ61Z6nSwGySXu=w1000</image:loc>
+      <image:loc>https://lh3.googleusercontent.com/d/1KooDPY2d7j16KCq29zbWTvCRmBothMhl=w1000</image:loc>
       <image:title>Aaditya&apos;s Aura Candy Crush Perfume</image:title>
       <image:caption>A playful, delicious gourmand scent for those who have a crush on pure sweetness. Available as 12 ml concentrated Attar and 50 ml Eau De Parfum. &quot;Crush on sweet</image:caption>
     </image:image>
@@ -2468,17 +2486,6 @@ Royal Oud Rose is a luxurious fragrance crafted for those who appreciate timeles
       <image:loc>https://lh3.googleusercontent.com/d/1qQ8iYTaUCQjtkBI61wEpFzqBxlyv99AD=w1000</image:loc>
       <image:title>Imperial 1g Gold Embossed Men&apos;s Ring</image:title>
       <image:caption>Detailed with intricate embossing and a brilliant golden glow. This 1-gram gold plated ring is a statement piece for special occasions.</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://aadityasaura.com/product/f3xL6FfMRrztOeIWF2zF</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1Ba0lsYKDw9FfAjlvA3qs9tKcmOe_t0Ng=w1000</image:loc>
-      <image:title>Aaditya&apos;s Aura Lavender Ouhd Perfume</image:title>
-      <image:caption>A masterful fusion of calming lavender and powerful Ouhd. This fragrance offers a unique balance of serenity and strength, creating an aura of refined elegance.</image:caption>
     </image:image>
   </url>
   <url>
@@ -2597,6 +2604,17 @@ Inspired by Acqua di Gio.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1ht7UEVn6fTawjd4lbgwKdV492tMJI2lr=w1000</image:loc>
       <image:title>Exquisite Royal Gold Chandelier Earrings</image:title>
       <image:caption>Beautifully crafted gold earrings offering the perfect balance of elegance, durability, and luxury. Designed to seamlessly complement both modern styling and tr</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/gad77aLqsDNAzLwkLQ6X</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1IUhM_Ft2Zhlz2kytQRxLu6BkpjSVnE8e=w1000</image:loc>
+      <image:title>Cool Water — Freshness That Makes an Impression</image:title>
+      <image:caption>Refresh your senses with the clean, aquatic character of Cool Water. Fresh, crisp, and effortlessly masculine, it’s an ideal choice for daytime wear, summer day</image:caption>
     </image:image>
   </url>
   <url>
@@ -2836,6 +2854,17 @@ Inspired by Acqua di Gio.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/kjaaYXkUaU9Q7wmeJhfb</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/14YJahoLCJgF7V6wfaZUT298YYUwtaw7_=w1000</image:loc>
+      <image:title>Chocolate</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Chocolate. Long-lasting and exquisite.</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/ko1zcl6sMeFSsIfWstqr</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -2844,17 +2873,6 @@ Inspired by Acqua di Gio.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1wYC9gIngow-jzYyYc-rLr2VKS_ZsIDRc=w1000</image:loc>
       <image:title>Modern Geometric Gold Ring</image:title>
       <image:caption>A contemporary ring with clean geometric lines, ideal for the modern sophisticated woman.</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://aadityasaura.com/product/kpuM7FQkshtCyw0b9yBh</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1aTARhvQSwppIbNhryhD58BJb9RCsRUGv=w1000</image:loc>
-      <image:title>Mitti Attar</image:title>
-      <image:caption>Mitti Attar captures the magical aroma of the first rain touching dry earth. This traditional fragrance brings the nostalgic scent of wet soil, creating a calm </image:caption>
     </image:image>
   </url>
   <url>
@@ -2960,6 +2978,17 @@ Inspired by Acqua di Gio.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1PMDj9Affly_BBuOGJAso7UuSCuwERRq9=w1000</image:loc>
       <image:title>Double Woven Gold Chains</image:title>
       <image:caption>A pair of bold gold chains showcasing a thick woven mesh style alongside a slightly more compact braided design.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/nTFftupCRIfOC0ilcsZF</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1FLPjUL-8MBpYQPHj6OhEizZhuppsGAOK=w1000</image:loc>
+      <image:title>Royal Elixir</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Royal Elixir. Long-lasting and exquisite.</image:caption>
     </image:image>
   </url>
   <url>
@@ -3100,6 +3129,17 @@ Inspired by Armani Code.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/pWQrGP7Lc3g6rk0EoZ8a</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1msm3g-xwb1882TKGNmhr4lxBw2__yVjm=w1000</image:loc>
+      <image:title>Imperial Leaf</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Imperial Leaf. Long-lasting and exquisite.</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/paJaRW1cYpIrc84hFC9F</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -3131,6 +3171,17 @@ Inspired by Coco Chanel.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1jTy_JWJSCPwCqN27vRUeL8vfUZrtNkXU=w1000</image:loc>
       <image:title>Regal Rope Twist Chain</image:title>
       <image:caption>Intricately woven rope links form this regal masterpiece. Crafted in premium gold to bring lasting elegance to your necklace collection.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/pkrNlCvDQHJ9t58akXsH</loc>
+    <lastmod>2026-09-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1S045bWVtUEMYKpNDJrMKr8WKzKotrM3P=w1000</image:loc>
+      <image:title>Lily</image:title>
+      <image:caption>A luxury fragrance designed to blend elegance with bold depth. Discover the premium quality of Lily. Long-lasting and exquisite.</image:caption>
     </image:image>
   </url>
   <url>
@@ -3544,19 +3595,6 @@ Inspired by Prada L’Homme.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/16uDhZqUHJ1j4MBZbKvSguAgk5Lp_r3sr=w1000</image:loc>
       <image:title>Minimalist Dainty Silver Link Chain</image:title>
       <image:caption>Sleek and understated, this minimalist link chain offers a clean aesthetic that complements any outfit. Ideal for layering with other necklaces.</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://aadityasaura.com/product/wxLhcUWlTJHwrfPWnNsO</loc>
-    <lastmod>2026-09-07</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://lh3.googleusercontent.com/d/1KY2Gw3cco4w20IwOXDsZGMZn9yFzna28=w1000</image:loc>
-      <image:title>Aaditya&apos;s Aura Royal Saffron Perfume</image:title>
-      <image:caption>The epitome of luxury, Royal Saffron features the world&apos;s most precious spice. A warm, golden fragrance that exudes royalty and sophistication.
-
-✨ Price Startin</image:caption>
     </image:image>
   </url>
   <url>
