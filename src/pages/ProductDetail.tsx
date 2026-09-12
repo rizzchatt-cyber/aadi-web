@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -86,33 +87,7 @@ export default function ProductDetail() {
         }
     };
 
-    const isFragranceProduct = (prod: any) => {
-        if (!prod) return false;
-        const catName = (prod.category_id || prod.categoryName || '').toLowerCase();
-        const matName = (prod.material || '').toLowerCase();
-        if (catName.includes('jewel') || matName.includes('jewel') || matName.includes('gold') || matName.includes('silver')) {
-            if (prod.fragranceOptions?.enabled !== true) return false;
-        }
-        return true;
-    };
-
-    const getFragranceStartingPrices = (prod: any) => {
-        if (!prod) return { attarMin: 199, perfumeMin: 549 };
-        const opts = prod.fragranceOptions || {};
-        const attarPrices = [
-            opts.attar?.['3ml']?.price,
-            opts.attar?.['6ml']?.price,
-            opts.attar?.['9ml']?.price,
-        ].filter(p => p && typeof p === 'number' && p > 0);
-        const perfumePrices = [
-            opts.perfume?.['30ml']?.price,
-            opts.perfume?.['60ml']?.price,
-            opts.perfume?.['100ml']?.price,
-        ].filter(p => p && typeof p === 'number' && p > 0);
-        const attarMin = attarPrices.length > 0 ? Math.min(...attarPrices) : 199;
-        const perfumeMin = perfumePrices.length > 0 ? Math.min(...perfumePrices) : 549;
-        return { attarMin, perfumeMin };
-    };
+    const fragrancePricing = getFragrancePricing(product);
 
     const handleShopNow = () => {
         if (isFragranceProduct(product)) {
@@ -311,11 +286,15 @@ export default function ProductDetail() {
                                 <Maximize2 size={24} />
                             </button>
 
-                            {product.discount > 0 && (
+                            {isFragranceProduct(product) ? (
+                                <div className="absolute top-8 left-8 bg-red-600 text-white font-black px-4 py-2 rounded-xl shadow-xl text-lg">
+                                    {fragrancePricing.overallMaxDiscount}% OFF
+                                </div>
+                            ) : product.discount > 0 ? (
                                 <div className="absolute top-8 left-8 bg-red-600 text-white font-black px-4 py-2 rounded-xl shadow-xl text-lg">
                                     {product.discount}% OFF
                                 </div>
-                            )}
+                            ) : null}
                         </div>
 
                         {/* Thumbnails */}
@@ -346,25 +325,34 @@ export default function ProductDetail() {
                             <h1 className="text-4xl md:text-5xl font-serif text-charcoal mb-4 leading-tight">{product.title}</h1>
                             <div className="flex items-center gap-4">
                                 {isFragranceProduct(product) ? (
-                                    <div className="flex flex-col gap-2 bg-gold/5 p-4 rounded-2xl border border-gold/10 w-full">
+                                    <div className="flex flex-col gap-3 bg-gradient-to-r from-gold/10 via-amber-50/60 to-gold/10 p-4 md:p-5 rounded-2xl border border-gold/20 shadow-sm w-full">
                                         <div className="flex flex-wrap items-center gap-6">
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-xs font-bold text-gold uppercase tracking-wider">Attar Starting</span>
-                                                <span className="text-2xl font-serif font-bold text-charcoal">
-                                                    ₹{getFragranceStartingPrices(product).attarMin.toLocaleString()}
-                                                </span>
+                                            {/* Attar Starting */}
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-bold text-gold uppercase tracking-widest">Attar Starting</span>
+                                                <div className="flex items-baseline gap-2 mt-0.5">
+                                                    <span className="text-2xl font-serif font-black text-charcoal">₹{fragrancePricing.attar.minPrice.toLocaleString()}</span>
+                                                    <span className="text-sm text-charcoal/40 line-through">₹{fragrancePricing.attar.minMrp.toLocaleString()}</span>
+                                                    <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{fragrancePricing.attar.maxDiscount}% OFF</span>
+                                                </div>
                                             </div>
-                                            <div className="w-px h-6 bg-gold/20 hidden sm:block" />
-                                            <div className="flex items-baseline gap-2">
-                                                <span className="text-xs font-bold text-gold uppercase tracking-wider">Perfume Starting</span>
-                                                <span className="text-2xl font-serif font-bold text-charcoal">
-                                                    ₹{getFragranceStartingPrices(product).perfumeMin.toLocaleString()}
-                                                </span>
+                                            <div className="w-px h-8 bg-gold/20 hidden sm:block" />
+                                            {/* Perfume Starting */}
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] font-bold text-gold uppercase tracking-widest">Perfume Starting</span>
+                                                <div className="flex items-baseline gap-2 mt-0.5">
+                                                    <span className="text-2xl font-serif font-black text-charcoal">₹{fragrancePricing.perfume.minPrice.toLocaleString()}</span>
+                                                    <span className="text-sm text-charcoal/40 line-through">₹{fragrancePricing.perfume.minMrp.toLocaleString()}</span>
+                                                    <span className="text-xs font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded-full">{fragrancePricing.perfume.maxDiscount}% OFF</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <p className="text-[10px] font-bold text-charcoal/50 uppercase tracking-widest mt-1">
-                                            Select size (3ml, 6ml, 9ml Attar & 30ml, 60ml, 100ml Perfume)
-                                        </p>
+                                        <div className="pt-2 border-t border-gold/15 flex flex-wrap items-center gap-2 text-xs font-medium text-charcoal/70">
+                                            <span className="font-bold text-charcoal uppercase tracking-wider text-[10px] bg-gold/10 px-2 py-0.5 rounded">Sizes:</span>
+                                            <span className="font-bold text-charcoal">Small</span> <span className="text-[10px] text-charcoal/50">(3ml / 30ml)</span> • 
+                                            <span className="font-bold text-charcoal">Medium</span> <span className="text-[10px] text-charcoal/50">(6ml / 60ml)</span> • 
+                                            <span className="font-bold text-charcoal">Large</span> <span className="text-[10px] text-charcoal/50">(12ml / 100ml)</span>
+                                        </div>
                                     </div>
                                 ) : product.priceOnRequest ? (
                                     <div className="flex flex-col gap-4">

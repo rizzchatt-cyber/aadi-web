@@ -15,6 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -59,35 +60,6 @@ export default function Home() {
       unsubBanners?.();
     };
   }, []);
-
-  const isFragranceProduct = (prod: any) => {
-    if (!prod) return false;
-    const catName = (prod.category_id || prod.categoryName || '').toLowerCase();
-    const matName = (prod.material || '').toLowerCase();
-    if (catName.includes('jewel') || matName.includes('jewel') || matName.includes('gold') || matName.includes('silver')) {
-      if (prod.fragranceOptions?.enabled !== true) return false;
-    }
-    return true;
-  };
-
-  const getFragranceStartingPrices = (prod: any) => {
-    const opts = prod?.fragranceOptions || {};
-    const attarPrices = [
-      opts.attar?.['3ml']?.price,
-      opts.attar?.['6ml']?.price,
-      opts.attar?.['9ml']?.price,
-    ].filter(p => p && typeof p === 'number' && p > 0);
-    const perfumePrices = [
-      opts.perfume?.['30ml']?.price,
-      opts.perfume?.['60ml']?.price,
-      opts.perfume?.['100ml']?.price,
-    ].filter(p => p && typeof p === 'number' && p > 0);
-
-    const attarMin = attarPrices.length > 0 ? Math.min(...attarPrices) : 199;
-    const perfumeMin = perfumePrices.length > 0 ? Math.min(...perfumePrices) : 549;
-
-    return { attarMin, perfumeMin };
-  };
 
   const handleShopNow = (product: any) => {
     setSelectedProduct(product);
@@ -271,69 +243,86 @@ export default function Home() {
                 <p className="text-red-500 text-sm">{error}</p>
                 <p className="text-gray-500 text-[10px] mt-4 uppercase tracking-widest font-bold">Please Check Firestore Security Rules</p>
               </div>
-            ) : featuredProducts.length > 0 ? featuredProducts.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="group flex flex-col relative"
-              >
+            ) : featuredProducts.length > 0 ? featuredProducts.map((product, idx) => {
+              const isFragrance = isFragranceProduct(product);
+              const fragrancePricing = isFragrance ? getFragrancePricing(product) : null;
+
+              return (
                 <motion.div
-                  onClick={() => navigate(`/product/${product.id}`)}
-                  className="bg-white rounded-[24px] overflow-hidden border border-gold/5 shadow-premium hover:shadow-luxury hover:-translate-y-2 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col h-full cursor-pointer transform-gpu"
+                  key={product.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="group flex flex-col relative"
                 >
-                  <div className="relative aspect-square overflow-hidden bg-gray-50">
-                    <DriveImage
-                      src={product.images?.[0]}
-                      alt={product.title}
-                      priority={idx === 0}
-                      className="w-full h-full object-contain p-4 object-center group-hover:scale-110 transition-transform duration-[2s] ease-[cubic-bezier(0.2,1,0.3,1)]"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                  <motion.div
+                    onClick={() => navigate(`/product/${product.id}`)}
+                    className="bg-white rounded-[24px] overflow-hidden border border-gold/5 shadow-premium hover:shadow-luxury hover:-translate-y-2 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col h-full cursor-pointer transform-gpu"
+                  >
+                    <div className="relative aspect-square overflow-hidden bg-gray-50">
+                      <DriveImage
+                        src={product.images?.[0]}
+                        alt={product.title}
+                        priority={idx === 0}
+                        className="w-full h-full object-contain p-4 object-center group-hover:scale-110 transition-transform duration-[2s] ease-[cubic-bezier(0.2,1,0.3,1)]"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
-                    {/* Free Delivery Badge */}
-                    <div className="absolute top-4 left-4 z-10">
-                      <div className="bg-gold/10 text-gold border border-gold/20 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-xs w-fit">
-                        Free Delivery
-                      </div>
-                    </div>
-
-                    {/* Three Dots - "three dots" as requested */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Action for sharing or menu
-                      }}
-                      className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-white"
-                      aria-label="More options"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-                  </div>
-                  <div className="p-6 flex-grow flex flex-col text-center">
-                    <h3 className="text-charcoal text-xs md:text-sm font-bold uppercase tracking-widest line-clamp-2 leading-tight mb-4 h-10 group-hover:text-gold transition-colors">
-                      {product.title}
-                    </h3>
-                    <div className="w-8 h-px bg-gold/10 mx-auto mb-6 group-hover:w-16 group-hover:bg-gold transition-all duration-700" />
-                    <div className="flex flex-col items-center mt-auto gap-4">
-                      <div className="flex flex-col items-center">
-                        {isFragranceProduct(product) ? (
-                          <div className="flex flex-col gap-0.5 text-center">
-                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-xs">
-                              <span className="font-bold text-gold uppercase tracking-wider">Attar Starting</span>
-                              <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).attarMin.toLocaleString()}</span>
-                            </div>
-                            <div className="flex items-center justify-center gap-1.5 text-[10px] md:text-xs">
-                              <span className="font-bold text-gold uppercase tracking-wider">Perfume Starting</span>
-                              <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).perfumeMin.toLocaleString()}</span>
-                            </div>
+                      {/* Free Delivery & Discount Badges */}
+                      <div className="absolute top-4 left-4 z-10 flex flex-col gap-1">
+                        {isFragrance && fragrancePricing ? (
+                          <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-xl shadow-lg">
+                            {fragrancePricing.overallMaxDiscount}% OFF
                           </div>
-                        ) : product.priceOnRequest ? null : (
-                          <span className="text-sm font-black text-gray-900 tracking-tighter">₹{(product.price || 0).toLocaleString()}</span>
-                        )}
+                        ) : product.discount > 0 ? (
+                          <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-xl shadow-lg">
+                            {product.discount}% OFF
+                          </div>
+                        ) : null}
+                        <div className="bg-gold/10 text-gold border border-gold/20 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-xs w-fit">
+                          Free Delivery
+                        </div>
                       </div>
+
+                      {/* Three Dots - "three dots" as requested */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Action for sharing or menu
+                        }}
+                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-white"
+                        aria-label="More options"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                    <div className="p-6 flex-grow flex flex-col text-center">
+                      <h3 className="text-charcoal text-xs md:text-sm font-bold uppercase tracking-widest line-clamp-2 leading-tight mb-4 h-10 group-hover:text-gold transition-colors">
+                        {product.title}
+                      </h3>
+                      <div className="w-8 h-px bg-gold/10 mx-auto mb-6 group-hover:w-16 group-hover:bg-gold transition-all duration-700" />
+                      <div className="flex flex-col items-center mt-auto gap-4">
+                        <div className="flex flex-col items-center">
+                          {isFragrance && fragrancePricing ? (
+                            <div className="flex flex-col gap-1 text-center">
+                              <div className="flex items-baseline justify-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-gold uppercase tracking-wider text-[11px] md:text-xs">Attar</span>
+                                <span className="font-serif font-extrabold text-charcoal text-sm md:text-base">₹{fragrancePricing.attar.minPrice}</span>
+                                <span className="text-xs text-charcoal/40 line-through">₹{fragrancePricing.attar.minMrp}</span>
+                                <span className="text-xs font-bold text-red-500">({fragrancePricing.attar.maxDiscount}% OFF)</span>
+                              </div>
+                              <div className="flex items-baseline justify-center gap-1.5 flex-wrap">
+                                <span className="font-bold text-gold uppercase tracking-wider text-[11px] md:text-xs">Perfume</span>
+                                <span className="font-serif font-extrabold text-charcoal text-sm md:text-base">₹{fragrancePricing.perfume.minPrice}</span>
+                                <span className="text-xs text-charcoal/40 line-through">₹{fragrancePricing.perfume.minMrp}</span>
+                                <span className="text-xs font-bold text-red-500">({fragrancePricing.perfume.maxDiscount}% OFF)</span>
+                              </div>
+                            </div>
+                          ) : product.priceOnRequest ? null : (
+                            <span className="text-base md:text-xl font-serif font-bold text-charcoal tracking-tighter">₹{(product.price || 0).toLocaleString()}</span>
+                          )}
+                        </div>
 
                       {product.priceOnRequest && !isFragranceProduct(product) ? (
                         <a
@@ -378,7 +367,8 @@ export default function Home() {
                   </div>
                 </motion.div>
               </motion.div>
-            )) : (
+            );
+          }) : (
               <div className="col-span-full py-24 text-gray-300 italic text-center w-full font-serif text-2xl">Curating the finest pieces...</div>
             )}
           </AnimatePresence>

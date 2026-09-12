@@ -1,0 +1,296 @@
+[
+  {
+    "id": "108d4bzqYWcizEXjCUYy",
+    "name": "Gents Bracelet",
+    "createdAt": "2026-04-13T10:54:31.943Z",
+    "slug": "gents-bracelet",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "12cc3t9QYORxF7iSoDbF",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "createdAt": "2026-04-02T11:14:21.495Z",
+    "slug": "bracelet-(female)",
+    "name": "bracelet (female)",
+    "imageUrl": ""
+  },
+  {
+    "id": "1xgNiNC1zl7eUIQwrbhw",
+    "name": "silver ",
+    "slug": "silver",
+    "createdAt": "2026-04-10T17:28:08.591Z",
+    "imageUrl": "https://iili.io/BGCqSFS.jpg"
+  },
+  {
+    "id": "4jz0DYHxk1yiqLSURufJ",
+    "slug": "chain",
+    "createdAt": "2026-04-01T08:18:01.915Z",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "name": "chain",
+    "imageUrl": ""
+  },
+  {
+    "id": "7S3U8OvKJ9OwWxhJJnQH",
+    "name": "Silver Chains",
+    "imageUrl": "",
+    "updatedAt": "2026-04-11T14:59:41.538Z",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "slug": "silver-chains",
+    "createdAt": "2026-04-10T18:28:21.696Z"
+  },
+  {
+    "id": "7SPWYecrk09d8aowJAEr",
+    "name": "bangles",
+    "imageUrl": "",
+    "createdAt": "2026-04-05T09:31:56.911Z",
+    "slug": "bangles",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr"
+  },
+  {
+    "id": "CK8iGHm3PJ17BrKPl6nr",
+    "createdAt": "2026-03-25T08:24:51.324Z",
+    "slug": "unisex",
+    "parentId": "jkYQEACfKakeMJXq77ud",
+    "name": "unisex",
+    "imageUrl": ""
+  },
+  {
+    "id": "DRyDZjcO3Eb2RZ6SqRvl",
+    "slug": "women-silver-chains",
+    "createdAt": "2026-04-11T15:16:32.236Z",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "name": "Women Silver Chains",
+    "imageUrl": "",
+    "updatedAt": "2026-04-11T15:23:19.392Z"
+  },
+  {
+    "id": "FQ4GGBIyM94pa7Lzw5Lj",
+    "parentId": "gsUoxHYUK31nKRi7ezLl",
+    "name": "Rajwada Sets",
+    "createdAt": "2026-04-13T10:54:33.869Z",
+    "slug": "rajwada-sets"
+  },
+  {
+    "id": "FWkYLKCjRrcQna2r4kE1",
+    "updatedAt": "2026-04-11T14:59:55.425Z",
+    "name": "Payal",
+    "imageUrl": "",
+    "slug": "payal",
+    "createdAt": "2026-04-10T17:56:25.411Z",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw"
+  },
+  {
+    "id": "GRRSJbfWIyRDdh2bJW0K",
+    "name": "For Men 👔",
+    "imageUrl": "",
+    "parentId": "jkYQEACfKakeMJXq77ud",
+    "createdAt": "2026-03-07T10:13:53.668Z",
+    "slug": "for-men-👔"
+  },
+  {
+    "id": "HsMV84J3PdMRF7O4vXN3",
+    "name": "Men Chain",
+    "createdAt": "2026-04-13T10:18:13.336Z",
+    "slug": "men-chain",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "O6Aij3ynIGIDUsJJ22nr",
+    "slug": "gold-accessories",
+    "createdAt": "2026-02-27T04:18:05.744Z",
+    "name": "Gold Accessories (Male & Female)",
+    "imageUrl": "https://iili.io/BUGXZW7.jpg",
+    "updatedAt": "2026-04-17T05:40:23.022Z"
+  },
+  {
+    "id": "OZRIYAM5fEP7LLGP4I8q",
+    "name": "Womens Ring",
+    "imageUrl": "",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "slug": "womens-ring",
+    "createdAt": "2026-04-11T15:27:35.447Z"
+  },
+  {
+    "id": "OeJOxa7vfd2Wk4Kpix4E",
+    "slug": "earrings",
+    "createdAt": "2026-04-01T15:53:17.622Z",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "imageUrl": "",
+    "name": "bali",
+    "updatedAt": "2026-04-20T08:38:23.733Z"
+  },
+  {
+    "id": "PyJCOwdqabXTqNGy3Viu",
+    "slug": "silver-gift",
+    "createdAt": "2026-04-19T14:06:26.144Z",
+    "parentId": "k16HXq9NtWmken0Y0uR7",
+    "updatedAt": "2026-04-20T08:41:33.574Z",
+    "name": "Silver Gift",
+    "imageUrl": ""
+  },
+  {
+    "id": "RlePRC7hpp8D2oRaIk2Z",
+    "createdAt": "2026-04-02T13:21:01.880Z",
+    "slug": "rings-(women)",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "name": "rings (women)",
+    "imageUrl": ""
+  },
+  {
+    "id": "SvyzkYc5iYO47uG0Eqoo",
+    "name": "Gents Chain Locket",
+    "createdAt": "2026-04-13T10:20:46.942Z",
+    "slug": "gents-chain-locket",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "UDnRJP9wLDNrtrml8dyj",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "createdAt": "2026-04-12T06:10:04.690Z",
+    "slug": "womens-bichiya",
+    "name": "Women's Bichiya",
+    "imageUrl": ""
+  },
+  {
+    "id": "UaRWs5NWW0SofTUPdHMB",
+    "name": "Ring for Men",
+    "slug": "ring-for-men",
+    "createdAt": "2026-04-13T10:15:23.599Z",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "XWXXer2OSkJoLkizO9LZ",
+    "name": "Traditional",
+    "createdAt": "2026-03-12T14:00:30.756Z",
+    "slug": "traditional",
+    "parentId": "jkYQEACfKakeMJXq77ud"
+  },
+  {
+    "id": "XqWikKZjcKMsGunfwdB4",
+    "name": "Earrings",
+    "createdAt": "2026-04-20T08:41:10.695Z",
+    "slug": "earrings",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr"
+  },
+  {
+    "id": "bXBUiSGIOgq2KghNKtZh",
+    "name": "Mangalsutra Pendent",
+    "createdAt": "2026-04-13T10:54:35.916Z",
+    "slug": "mangalsutra-pendent",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "bcgKGHNW6WS8UZmBYOqK",
+    "updatedAt": "2026-04-20T08:41:46.546Z",
+    "imageUrl": "",
+    "name": "Rani Har",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "slug": "rani-har",
+    "createdAt": "2026-04-06T13:49:43.267Z"
+  },
+  {
+    "id": "cbrJ3obulIZM5FqJYpWW",
+    "name": "Bangles",
+    "slug": "bangles",
+    "createdAt": "2026-04-17T06:41:29.183Z",
+    "parentId": "gsUoxHYUK31nKRi7ezLl"
+  },
+  {
+    "id": "gsUoxHYUK31nKRi7ezLl",
+    "imageUrl": "https://iili.io/BUW6QV9.jpg",
+    "name": "1G gold",
+    "updatedAt": "2026-04-17T06:00:42.728Z",
+    "slug": "1g-gold",
+    "createdAt": "2026-04-13T10:09:52.641Z"
+  },
+  {
+    "id": "hL2szPzM7D2lcs8l1CIz",
+    "slug": "gents-kada",
+    "createdAt": "2026-04-06T13:32:09.500Z",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "updatedAt": "2026-04-20T08:41:56.233Z",
+    "name": "Gents Kada",
+    "imageUrl": ""
+  },
+  {
+    "id": "hkgmAbFYXHKl7sSFg6W1",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "slug": "male",
+    "createdAt": "2026-03-27T06:30:36.667Z",
+    "name": "Ring",
+    "imageUrl": ""
+  },
+  {
+    "id": "iyystKUvf2p98aXqx16b",
+    "slug": "silver-lota-glass",
+    "createdAt": "2026-04-12T06:12:28.789Z",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "name": "Silver Lota & Glass",
+    "imageUrl": ""
+  },
+  {
+    "id": "jkYQEACfKakeMJXq77ud",
+    "imageUrl": "https://iili.io/BUWFGwP.jpg",
+    "name": "Attar, Perfume",
+    "updatedAt": "2026-04-17T05:55:49.275Z",
+    "slug": "custome-attar-+-perfume",
+    "createdAt": "2026-02-27T04:25:29.938Z"
+  },
+  {
+    "id": "k16HXq9NtWmketzndieu",
+    "updatedAt": "2026-04-19T13:15:23.355Z",
+    "name": "Aura’s Gift section",
+    "imageUrl": "https://iili.io/BgeCZOJ.jpg",
+    "slug": "aura’s-gift-section",
+    "createdAt": "2026-04-19T13:15:23.355Z"
+  },
+  {
+    "id": "oOP0K7xHAQBSCTM98g6O",
+    "name": "For Women 👗",
+    "imageUrl": "",
+    "slug": "for-women-👗",
+    "createdAt": "2026-03-07T10:16:27.797Z",
+    "parentId": "jkYQEACfKakeMJXq77ud"
+  },
+  {
+    "id": "pBEsglsiQb2GWynvcXip",
+    "name": "chain (female)",
+    "imageUrl": "",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "slug": "chain",
+    "createdAt": "2026-04-02T11:14:11.016Z"
+  },
+  {
+    "id": "piVa8wu4NsYjcEwhaA73",
+    "slug": "aura",
+    "createdAt": "2026-04-13T11:01:11.153Z",
+    "imageUrl": "https://iili.io/BgjynlS.jpg",
+    "name": "aura",
+    "updatedAt": "2026-04-20T07:59:48.034Z"
+  },
+  {
+    "id": "rAGO3KlljH7yN8AWQ3yl",
+    "createdAt": "2026-04-12T06:37:26.904Z",
+    "slug": "silver-bracelet-women",
+    "parentId": "1xgNiNC1zl7eUIQwrbhw",
+    "name": "Silver Bracelet (Women)",
+    "imageUrl": ""
+  },
+  {
+    "id": "umlWfl9b2rGxKo9wZMVt",
+    "name": "bracelet",
+    "imageUrl": "",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr",
+    "slug": "bracelet",
+    "createdAt": "2026-04-01T14:53:05.424Z"
+  },
+  {
+    "id": "xLnfpwhNMT82yO5bpkaI",
+    "name": "Mangtika",
+    "imageUrl": "",
+    "updatedAt": "2026-04-20T08:42:15.467Z",
+    "slug": "mangtika",
+    "createdAt": "2026-04-06T13:58:21.545Z",
+    "parentId": "O6Aij3ynIGIDUsJJ22nr"
+  }
+]

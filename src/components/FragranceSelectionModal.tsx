@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, Sparkles, Droplet, Wind, Check, ShoppingBag, ArrowRight } from 'lucide-react';
 import DriveImage from './DriveImage';
+import { getFragrancePricing } from '../utils/fragranceHelpers';
 
 export interface SelectedFragranceVariant {
     type: 'Attar' | 'Perfume';
@@ -28,49 +29,13 @@ export default function FragranceSelectionModal({
     const [selectedType, setSelectedType] = useState<'Attar' | 'Perfume'>('Attar');
     const [selectedSize, setSelectedSize] = useState<string>('6ml');
 
-    // Extract options or compute fallbacks
-    const options = product?.fragranceOptions || {};
-    const basePrice = Number(product?.price) || 500;
+    const pricing = getFragrancePricing(product);
 
-    // Attar Config
-    const attarEnabled = options.attar?.enabled !== false;
-    const attarPrices: Record<string, { enabled: boolean; price: number; label: string }> = {
-        '3ml': {
-            enabled: options.attar?.['3ml']?.enabled !== false,
-            price: (options.attar?.['3ml']?.price && options.attar['3ml'].price > 0) ? options.attar['3ml'].price : 199,
-            label: 'Small (3ml)'
-        },
-        '6ml': {
-            enabled: options.attar?.['6ml']?.enabled !== false,
-            price: (options.attar?.['6ml']?.price && options.attar['6ml'].price > 0) ? options.attar['6ml'].price : 349,
-            label: 'Medium (6ml)'
-        },
-        '9ml': {
-            enabled: options.attar?.['9ml']?.enabled !== false,
-            price: (options.attar?.['9ml']?.price && options.attar['9ml'].price > 0) ? options.attar['9ml'].price : 549,
-            label: 'Large (9ml)'
-        }
-    };
+    const attarEnabled = pricing.attar.enabled;
+    const attarPrices = pricing.attar.options;
 
-    // Perfume Config
-    const perfumeEnabled = options.perfume?.enabled !== false;
-    const perfumePrices: Record<string, { enabled: boolean; price: number; label: string }> = {
-        '30ml': {
-            enabled: options.perfume?.['30ml']?.enabled !== false,
-            price: (options.perfume?.['30ml']?.price && options.perfume['30ml'].price > 0) ? options.perfume['30ml'].price : 549,
-            label: 'Small (30ml)'
-        },
-        '60ml': {
-            enabled: options.perfume?.['60ml']?.enabled !== false,
-            price: (options.perfume?.['60ml']?.price && options.perfume['60ml'].price > 0) ? options.perfume['60ml'].price : 799,
-            label: 'Medium (60ml)'
-        },
-        '100ml': {
-            enabled: options.perfume?.['100ml']?.enabled !== false,
-            price: (options.perfume?.['100ml']?.price && options.perfume['100ml'].price > 0) ? options.perfume['100ml'].price : 1499,
-            label: 'Large (100ml)'
-        }
-    };
+    const perfumeEnabled = pricing.perfume.enabled;
+    const perfumePrices = pricing.perfume.options;
 
     // Adjust selected type & size if initially disabled
     useEffect(() => {
@@ -105,8 +70,18 @@ export default function FragranceSelectionModal({
     if (!isOpen || !product) return null;
 
     const currentMap = selectedType === 'Attar' ? attarPrices : perfumePrices;
-    const currentVariantObj = currentMap[selectedSize] || { price: basePrice, label: selectedSize, enabled: true };
+    const currentVariantObj = currentMap[selectedSize] || {
+        price: product?.price || 199,
+        mrp: (product?.price || 199) + 200,
+        discount: 50,
+        label: selectedSize,
+        sizeName: 'Small' as const,
+        ml: selectedSize,
+        enabled: true
+    };
     const currentPrice = currentVariantObj.price;
+    const currentMrp = currentVariantObj.mrp;
+    const currentDiscount = currentVariantObj.discount;
 
     const handleConfirm = () => {
         const typeLabel = selectedType === 'Attar' 
@@ -117,7 +92,7 @@ export default function FragranceSelectionModal({
             type: selectedType,
             typeLabel,
             size: selectedSize,
-            sizeLabel: currentVariantObj.label,
+            sizeLabel: `${currentVariantObj.sizeName} (${currentVariantObj.ml})`,
             price: currentPrice
         });
     };
@@ -149,7 +124,7 @@ export default function FragranceSelectionModal({
                         {/* Close button */}
                         <button
                             onClick={onClose}
-                            className="absolute top-5 right-5 p-2 text-charcoal/40 hover:text-gold rounded-full hover:bg-gold/10 transition-all z-20"
+                            className="absolute top-5 right-5 p-2 text-charcoal/40 hover:text-gold rounded-full hover:bg-gold/10 transition-all z-20 cursor-pointer"
                         >
                             <X size={20} />
                         </button>
@@ -211,8 +186,13 @@ export default function FragranceSelectionModal({
                                         <div>
                                             <h4 className="font-bold text-sm text-charcoal">Attar</h4>
                                             <p className="text-[10px] text-charcoal/60 leading-tight mt-0.5">
-                                                Pure raw concentrated oil (without alcohol)
+                                                Pure raw concentrated oil (Alcohol Free)
                                             </p>
+                                            <div className="flex items-baseline gap-1.5 mt-1">
+                                                <span className="text-xs font-bold text-gold">From ₹{pricing.attar.minPrice}</span>
+                                                <span className="text-[9px] text-charcoal/40 line-through">₹{pricing.attar.minMrp}</span>
+                                                <span className="text-[9px] font-bold text-red-500">({pricing.attar.maxDiscount}% OFF)</span>
+                                            </div>
                                         </div>
                                     </button>
 
@@ -244,6 +224,11 @@ export default function FragranceSelectionModal({
                                             <p className="text-[10px] text-charcoal/60 leading-tight mt-0.5">
                                                 Spray perfume (35% concentrated)
                                             </p>
+                                            <div className="flex items-baseline gap-1.5 mt-1">
+                                                <span className="text-xs font-bold text-gold">From ₹{pricing.perfume.minPrice}</span>
+                                                <span className="text-[9px] text-charcoal/40 line-through">₹{pricing.perfume.minMrp}</span>
+                                                <span className="text-[9px] font-bold text-red-500">({pricing.perfume.maxDiscount}% OFF)</span>
+                                            </div>
                                         </div>
                                     </button>
                                 </div>
@@ -265,7 +250,7 @@ export default function FragranceSelectionModal({
                                                 type="button"
                                                 disabled={!item.enabled}
                                                 onClick={() => setSelectedSize(sizeKey)}
-                                                className={`py-3.5 px-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
+                                                className={`py-3.5 px-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
                                                     isSelected
                                                         ? 'border-gold bg-gold/15 shadow-sm ring-2 ring-gold/40 text-gold font-bold'
                                                         : item.enabled
@@ -273,13 +258,29 @@ export default function FragranceSelectionModal({
                                                             : 'border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed'
                                                 }`}
                                             >
-                                                <span className="text-xs font-black uppercase tracking-wider">{sizeKey}</span>
-                                                <span className="text-[10px] text-charcoal/50 font-normal mt-0.5">
-                                                    {sizeKey === '3ml' || sizeKey === '30ml' ? 'Small' : sizeKey === '6ml' || sizeKey === '60ml' ? 'Medium' : 'Large'}
+                                                {/* BIG TEXT for Small / Medium / Large */}
+                                                <span className="text-sm font-black uppercase tracking-wider">{item.sizeName}</span>
+                                                {/* SMALL SUBTEXT for ml */}
+                                                <span className="text-[10px] text-charcoal/60 font-semibold mt-0.5">
+                                                    {item.ml}
                                                 </span>
-                                                <span className={`text-xs font-serif font-black mt-1 ${isSelected ? 'text-gold' : 'text-charcoal'}`}>
-                                                    ₹{item.price.toLocaleString()}
-                                                </span>
+
+                                                <div className="flex items-baseline gap-1 mt-1.5">
+                                                    <span className={`text-xs font-serif font-black ${isSelected ? 'text-gold' : 'text-charcoal'}`}>
+                                                        ₹{item.price.toLocaleString()}
+                                                    </span>
+                                                    {item.mrp > item.price && (
+                                                        <span className="text-[9px] text-charcoal/40 line-through">
+                                                            ₹{item.mrp.toLocaleString()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {item.discount > 0 && (
+                                                    <span className="mt-1 px-1.5 py-0.5 bg-red-100 text-red-600 text-[8px] font-bold rounded-md">
+                                                        {item.discount}% OFF
+                                                    </span>
+                                                )}
                                             </button>
                                         );
                                     })}
@@ -291,15 +292,23 @@ export default function FragranceSelectionModal({
                                 <div>
                                     <span className="text-[10px] font-black uppercase tracking-widest text-gold block">Selected Selection</span>
                                     <p className="text-sm font-bold text-charcoal">
-                                        {selectedType} • <span className="text-gold font-serif">{selectedSize}</span>
+                                        {selectedType} • <span className="text-gold font-serif">{currentVariantObj.sizeName} ({currentVariantObj.ml})</span>
                                     </p>
                                     <p className="text-[10px] text-charcoal/60">
                                         {selectedType === 'Attar' ? 'Pure Raw Oil (Alcohol Free)' : '35% Eau de Parfum'}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/40 block">Total Price</span>
-                                    <span className="text-2xl font-serif font-black text-gold">₹{currentPrice.toLocaleString()}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-charcoal/40 block">Offer Price</span>
+                                    <div className="flex items-baseline justify-end gap-1.5">
+                                        <span className="text-2xl font-serif font-black text-gold">₹{currentPrice.toLocaleString()}</span>
+                                        {currentMrp > currentPrice && (
+                                            <span className="text-xs text-charcoal/40 line-through">₹{currentMrp.toLocaleString()}</span>
+                                        )}
+                                    </div>
+                                    {currentDiscount > 0 && (
+                                        <span className="text-[10px] font-bold text-red-600">Save ₹{(currentMrp - currentPrice).toLocaleString()} ({currentDiscount}% OFF)</span>
+                                    )}
                                 </div>
                             </div>
                         </div>

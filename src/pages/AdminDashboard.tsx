@@ -206,15 +206,15 @@ export default function AdminDashboard() {
         enabled: true,
         attar: {
             enabled: true,
-            '3ml': { enabled: true, price: 199 },
-            '6ml': { enabled: true, price: 349 },
-            '9ml': { enabled: true, price: 549 }
+            '3ml': { enabled: true, price: 199, mrp: 399 },
+            '6ml': { enabled: true, price: 349, mrp: 599 },
+            '12ml': { enabled: true, price: 549, mrp: 849 }
         },
         perfume: {
             enabled: true,
-            '30ml': { enabled: true, price: 549 },
-            '60ml': { enabled: true, price: 799 },
-            '100ml': { enabled: true, price: 1499 }
+            '30ml': { enabled: true, price: 549, mrp: 849 },
+            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     };
     const [fragranceOptions, setFragranceOptions] = useState<any>(defaultFragranceState);
@@ -225,15 +225,15 @@ export default function AdminDashboard() {
         enabled: true,
         attar: {
             enabled: true,
-            '3ml': { enabled: true, price: 199 },
-            '6ml': { enabled: true, price: 349 },
-            '9ml': { enabled: true, price: 549 }
+            '3ml': { enabled: true, price: 199, mrp: 399 },
+            '6ml': { enabled: true, price: 349, mrp: 599 },
+            '12ml': { enabled: true, price: 549, mrp: 849 }
         },
         perfume: {
             enabled: true,
-            '30ml': { enabled: true, price: 549 },
-            '60ml': { enabled: true, price: 799 },
-            '100ml': { enabled: true, price: 1499 }
+            '30ml': { enabled: true, price: 549, mrp: 849 },
+            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     });
     const [isCategoryFragranceModalOpen, setIsCategoryFragranceModalOpen] = useState(false);
@@ -243,15 +243,15 @@ export default function AdminDashboard() {
         enabled: true,
         attar: {
             enabled: true,
-            '3ml': { enabled: true, price: 199 },
-            '6ml': { enabled: true, price: 349 },
-            '9ml': { enabled: true, price: 549 }
+            '3ml': { enabled: true, price: 199, mrp: 399 },
+            '6ml': { enabled: true, price: 349, mrp: 599 },
+            '12ml': { enabled: true, price: 549, mrp: 849 }
         },
         perfume: {
             enabled: true,
-            '30ml': { enabled: true, price: 549 },
-            '60ml': { enabled: true, price: 799 },
-            '100ml': { enabled: true, price: 1499 }
+            '30ml': { enabled: true, price: 549, mrp: 849 },
+            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     });
     const [isGlobalFragranceModalOpen, setIsGlobalFragranceModalOpen] = useState(false);
@@ -275,6 +275,7 @@ export default function AdminDashboard() {
         const attarPrices = [
             opts.attar?.['3ml']?.price,
             opts.attar?.['6ml']?.price,
+            opts.attar?.['12ml']?.price,
             opts.attar?.['9ml']?.price,
         ].filter((p: any) => p && typeof p === 'number' && p > 0);
         const perfumePrices = [
@@ -2342,7 +2343,7 @@ export default function AdminDashboard() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h4 className="font-bold text-sm text-charcoal">Fragrance Variant Settings</h4>
-                                            <p className="text-[10px] text-charcoal/50">Configure Attar (3ml, 6ml, 9ml) & Perfume (30ml, 60ml, 100ml) pricing</p>
+                                            <p className="text-[10px] text-charcoal/50">Configure Attar (3ml, 6ml, 12ml) & Perfume (30ml, 60ml, 100ml) pricing</p>
                                         </div>
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input
@@ -2378,7 +2379,7 @@ export default function AdminDashboard() {
                                                 </div>
                                                 {fragranceOptions.attar?.enabled !== false && (
                                                     <div className="grid grid-cols-3 gap-3 pt-2">
-                                                        {['3ml', '6ml', '9ml'].map((size) => (
+                                                        {['3ml', '6ml', '12ml'].map((size) => (
                                                             <div key={size} className="space-y-1">
                                                                 <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                     <span>{size} Price (₹)</span>
@@ -3041,7 +3042,7 @@ export default function AdminDashboard() {
                                             </div>
                                             {categoryFragranceOptions.attar?.enabled !== false && (
                                                 <div className="grid grid-cols-3 gap-3">
-                                                    {['3ml', '6ml', '9ml'].map((size) => (
+                                                    {['3ml', '6ml', '12ml'].map((size) => (
                                                         <div key={size} className="space-y-1">
                                                             <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                 <span>{size} (₹)</span>
@@ -3250,7 +3251,7 @@ export default function AdminDashboard() {
                                             </div>
                                             {globalFragranceOptions.attar?.enabled !== false && (
                                                 <div className="grid grid-cols-3 gap-3">
-                                                    {['3ml', '6ml', '9ml'].map((size) => (
+                                                    {['3ml', '6ml', '12ml'].map((size) => (
                                                         <div key={size} className="space-y-1">
                                                             <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                 <span>{size} (₹)</span>

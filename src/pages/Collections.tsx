@@ -24,6 +24,7 @@ import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
 export default function Collections() {
   const navigate = useNavigate();
@@ -95,35 +96,6 @@ export default function Collections() {
       unsubBanners?.();
     };
   }, []);
-
-  const isFragranceProduct = (prod: any) => {
-    if (!prod) return false;
-    const catName = (prod.category_id || prod.categoryName || '').toLowerCase();
-    const matName = (prod.material || '').toLowerCase();
-    if (catName.includes('jewel') || matName.includes('jewel') || matName.includes('gold') || matName.includes('silver')) {
-      if (prod.fragranceOptions?.enabled !== true) return false;
-    }
-    return true;
-  };
-
-  const getFragranceStartingPrices = (prod: any) => {
-    const opts = prod?.fragranceOptions || {};
-    const attarPrices = [
-      opts.attar?.['3ml']?.price,
-      opts.attar?.['6ml']?.price,
-      opts.attar?.['9ml']?.price,
-    ].filter(p => p && typeof p === 'number' && p > 0);
-    const perfumePrices = [
-      opts.perfume?.['30ml']?.price,
-      opts.perfume?.['60ml']?.price,
-      opts.perfume?.['100ml']?.price,
-    ].filter(p => p && typeof p === 'number' && p > 0);
-
-    const attarMin = attarPrices.length > 0 ? Math.min(...attarPrices) : 199;
-    const perfumeMin = perfumePrices.length > 0 ? Math.min(...perfumePrices) : 549;
-
-    return { attarMin, perfumeMin };
-  };
 
   const handleShopNow = (product: any) => {
     setSelectedProduct(product);
@@ -479,85 +451,99 @@ export default function Collections() {
                   </div>
                 ))
               ) : (
-                filteredProducts.map((product, idx) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 24 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-40px' }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.4, delay: (idx % 4) * 0.07, ease: [0.16, 1, 0.3, 1] }}
-                    className="product-card bg-white rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-gold/10 hover:-translate-y-1.5 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col group relative cursor-pointer transform-gpu"
-                    onClick={() => navigate(`/product/${product.id}`)}
-                  >
-                    <div className="relative aspect-square overflow-hidden bg-luxury-white">
-                      <DriveImage
-                        src={product.images?.[0]}
-                        alt={product.title}
-                        priority={idx < 4}
-                        className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
-                      />
+                filteredProducts.map((product, idx) => {
+                  const isFragrance = isFragranceProduct(product);
+                  const fragrancePricing = isFragrance ? getFragrancePricing(product) : null;
 
-                      {/* Interactive Badges */}
-                      <div className="absolute top-4 left-4 flex flex-col gap-2">
-                        {product.discount > 0 && (
-                          <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-xl shadow-lg">
-                            {product.discount}% OFF
-                          </div>
-                        )}
-                        <div className="bg-gold/10 text-gold border border-gold/20 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-xs w-fit">
-                          Free Delivery
-                        </div>
-                      </div>
+                  return (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, y: 24 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-40px' }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4, delay: (idx % 4) * 0.07, ease: [0.16, 1, 0.3, 1] }}
+                      className="product-card bg-white rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-gold/10 hover:-translate-y-1.5 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col group relative cursor-pointer transform-gpu"
+                      onClick={() => navigate(`/product/${product.id}`)}
+                    >
+                      <div className="relative aspect-square overflow-hidden bg-luxury-white">
+                        <DriveImage
+                          src={product.images?.[0]}
+                          alt={product.title}
+                          priority={idx < 4}
+                          className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
+                        />
 
-                      {/* Share Button overlay */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (navigator.share) {
-                            navigator.share({
-                              title: product.title,
-                              url: window.location.origin + `/product/${product.id}`
-                            });
-                          }
-                        }}
-                        className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md shadow-sm flex items-center justify-center text-charcoal/40 hover:text-gold hover:bg-white transition-all opacity-0 group-hover:opacity-100"
-                      >
-                        <Share2 size={16} />
-                      </button>
-                    </div>
-
-                    <div className="p-6 flex-grow flex flex-col">
-                      <div className="flex justify-between items-start gap-2 mb-3">
-                        <h3 className="text-charcoal text-xs md:text-sm font-bold font-serif line-clamp-2 leading-tight min-h-[32px] md:min-h-[40px] group-hover:text-gold transition-colors">
-                          {product.title}
-                        </h3>
-                      </div>
-
-                      <div className="mt-auto">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 md:mb-4">
-                          <div className="flex flex-col justify-center">
-                            {isFragranceProduct(product) ? (
-                              <div className="flex flex-col gap-0.5 text-left">
-                                <div className="flex items-center gap-1 text-[10px] md:text-xs">
-                                  <span className="font-bold text-gold uppercase tracking-wider">Attar Starting</span>
-                                  <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).attarMin.toLocaleString()}</span>
-                                </div>
-                                <div className="flex items-center gap-1 text-[10px] md:text-xs">
-                                  <span className="font-bold text-gold uppercase tracking-wider">Perfume Starting</span>
-                                  <span className="font-serif font-bold text-charcoal">₹{getFragranceStartingPrices(product).perfumeMin.toLocaleString()}</span>
-                                </div>
-                              </div>
-                            ) : product.priceOnRequest ? null : (
-                              <div className="flex items-baseline gap-2">
-                                <span className="text-sm md:text-lg font-serif font-bold text-charcoal">₹{(product.price || 0).toLocaleString()}</span>
-                                {product.discount > 0 && (
-                                  <span className="text-[8px] md:text-[10px] text-charcoal/20 line-through">₹{Math.round(product.price * (1 + product.discount / 100)).toLocaleString()}</span>
-                                )}
-                              </div>
-                            )}
+                        {/* Interactive Badges */}
+                        <div className="absolute top-4 left-4 flex flex-col gap-2">
+                          {isFragrance && fragrancePricing ? (
+                            <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-xl shadow-lg">
+                              {fragrancePricing.overallMaxDiscount}% OFF
+                            </div>
+                          ) : product.discount > 0 ? (
+                            <div className="bg-red-600 text-white text-[10px] font-black px-3 py-1 rounded-xl shadow-lg">
+                              {product.discount}% OFF
+                            </div>
+                          ) : null}
+                          <div className="bg-gold/10 text-gold border border-gold/20 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg shadow-xs w-fit">
+                            Free Delivery
                           </div>
                         </div>
+
+                        {/* Share Button overlay */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (navigator.share) {
+                              navigator.share({
+                                title: product.title,
+                                url: window.location.origin + `/product/${product.id}`
+                              });
+                            }
+                          }}
+                          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md shadow-sm flex items-center justify-center text-charcoal/40 hover:text-gold hover:bg-white transition-all opacity-0 group-hover:opacity-100"
+                        >
+                          <Share2 size={16} />
+                        </button>
+                      </div>
+
+                      <div className="p-6 flex-grow flex flex-col">
+                        <div className="flex justify-between items-start gap-2 mb-3">
+                          <h3 className="text-charcoal text-xs md:text-sm font-bold font-serif line-clamp-2 leading-tight min-h-[32px] md:min-h-[40px] group-hover:text-gold transition-colors">
+                            {product.title}
+                          </h3>
+                        </div>
+
+                        <div className="mt-auto">
+                          <div className="flex flex-col justify-between mb-3 md:mb-4">
+                            <div className="flex flex-col justify-center">
+                              {isFragrance && fragrancePricing ? (
+                                <div className="flex flex-col gap-1 text-left">
+                                  {/* Attar Starting */}
+                                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                                    <span className="font-bold text-gold uppercase tracking-wider text-[11px] md:text-xs">Attar</span>
+                                    <span className="font-serif font-extrabold text-charcoal text-sm md:text-base">₹{fragrancePricing.attar.minPrice}</span>
+                                    <span className="text-xs text-charcoal/40 line-through">₹{fragrancePricing.attar.minMrp}</span>
+                                    <span className="text-xs font-bold text-red-500">({fragrancePricing.attar.maxDiscount}% OFF)</span>
+                                  </div>
+                                  {/* Perfume Starting */}
+                                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                                    <span className="font-bold text-gold uppercase tracking-wider text-[11px] md:text-xs">Perfume</span>
+                                    <span className="font-serif font-extrabold text-charcoal text-sm md:text-base">₹{fragrancePricing.perfume.minPrice}</span>
+                                    <span className="text-xs text-charcoal/40 line-through">₹{fragrancePricing.perfume.minMrp}</span>
+                                    <span className="text-xs font-bold text-red-500">({fragrancePricing.perfume.maxDiscount}% OFF)</span>
+                                  </div>
+                                </div>
+                              ) : product.priceOnRequest ? null : (
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-base md:text-xl font-serif font-bold text-charcoal">₹{(product.price || 0).toLocaleString()}</span>
+                                  {product.discount > 0 && (
+                                    <span className="text-xs md:text-sm text-charcoal/40 line-through">₹{Math.round(product.price * (1 + product.discount / 100)).toLocaleString()}</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
 
                         <div className="flex gap-2">
@@ -602,7 +588,8 @@ export default function Collections() {
                       </div>
                     </div>
                   </motion.div>
-                ))
+                );
+              })
               )}
             </AnimatePresence>
 
