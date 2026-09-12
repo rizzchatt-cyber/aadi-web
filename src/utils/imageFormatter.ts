@@ -39,8 +39,8 @@ export const getOptimizedImageUrl = (url: string | undefined | null): string => 
         }
 
         if (fileId) {
-            // Prioritize gadgets proxy as it bypasses Google Drive 403 hotlinking restrictions
-            return `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent('https://drive.google.com/uc?id=' + fileId)}`;
+            // Prioritize lh3.googleusercontent.com direct user content CDN as it is the most reliable
+            return `https://lh3.googleusercontent.com/d/${fileId}=w1000`;
         }
     } catch (e) {
         // Ignore invalid URLs, return as-is
@@ -81,7 +81,6 @@ export const getImageFallbacks = (url: string | undefined | null): string[] => {
 
         if (fileId) {
             return [
-                `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent('https://drive.google.com/uc?id=' + fileId)}`,
                 `https://lh3.googleusercontent.com/d/${fileId}=w1000`,
                 `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`,
                 `https://drive.google.com/uc?export=view&id=${fileId}`,

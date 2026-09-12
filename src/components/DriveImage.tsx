@@ -16,28 +16,18 @@ export default function DriveImage({ src, alt, className = '', onError, priority
   const [loaded, setLoaded] = useState(priority);
   const imgRef = useRef<HTMLImageElement>(null);
 
-  // If image was already cached and loaded synchronously
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
-      setLoaded(true);
-    }
-  }, []);
-
-  // Reset states when source changes to allow fresh loading/shimmer transitions
+  // Reset states when source changes to allow fresh loading
   useEffect(() => {
     setIndex(0);
+    setLoaded(priority);
+  }, [src, priority]);
+
+  // Check if image was cached or loaded synchronously
+  useEffect(() => {
     if (imgRef.current?.complete && imgRef.current.naturalWidth > 0) {
       setLoaded(true);
-    } else {
-      setLoaded(priority);
     }
-  }, [src]);
-
-  useEffect(() => {
-    if (priority) {
-      setLoaded(true);
-    }
-  }, [priority]);
+  }, [src, index]);
 
   return (
     <span className="relative flex items-center justify-center w-full h-full overflow-hidden">
@@ -50,7 +40,7 @@ export default function DriveImage({ src, alt, className = '', onError, priority
       )}
       <LazyImage
         ref={imgRef}
-        src={fallbacks[index]}
+        src={fallbacks[index] || 'https://placehold.co/800x800?text=Product'}
         alt={alt}
         hero={priority}
         className={`${className} transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
@@ -58,7 +48,7 @@ export default function DriveImage({ src, alt, className = '', onError, priority
           if (index < fallbacks.length - 1) {
             setIndex(i => i + 1);
           } else {
-            setLoaded(true); // show broken state anyway
+            setLoaded(true); // show fallback/broken state anyway
             onError?.();
           }
         }}

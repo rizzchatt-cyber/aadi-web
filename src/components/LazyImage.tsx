@@ -18,10 +18,9 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
   hero = false,
   ...props
 }, forwardedRef) => {
-  const [isLoaded, setIsLoaded] = useState(hero);
   const internalRef = useRef<HTMLImageElement>(null);
 
-  // Merge refs so both IntersectionObserver and parent can access the DOM node
+  // Merge refs so both parent and element can access the DOM node
   const setRefs = (node: HTMLImageElement) => {
     internalRef.current = node;
     if (typeof forwardedRef === 'function') {
@@ -46,12 +45,9 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
       return absoluteUrl; // Do not proxy local URLs
     }
 
-    if (
-      absoluteUrl.includes('googleusercontent.com') || 
-      absoluteUrl.includes('drive.google.com') || 
-      absoluteUrl.includes('wsrv.nl')
-    ) {
-      return absoluteUrl; // Skip proxying for Google Drive and already proxied URLs
+    // Direct Google CDN links should be loaded directly, without wsrv.nl proxy
+    if (absoluteUrl.includes('googleusercontent.com') || absoluteUrl.includes('drive.google.com')) {
+      return absoluteUrl;
     }
 
     try {
@@ -59,10 +55,6 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
       proxyUrl.searchParams.set('url', absoluteUrl);
       proxyUrl.searchParams.set('output', 'webp');
       proxyUrl.searchParams.set('q', '75');
-      
-      // If width is provided and is a number, we can add it to proxy
-      // We will skip specific width generation for now unless explicit, to prevent cropping issues,
-      // but wsrv.nl handles resizing well if needed.
       return proxyUrl.toString();
     } catch (e) {
       return url; // Fallback
@@ -71,48 +63,18 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
 
   const optimizedSrc = getOptimizedSrc(src);
 
-  useEffect(() => {
-    if (hero) return; // No lazy loading for hero images
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsLoaded(true);
-            if (internalRef.current) {
-              observer.unobserve(internalRef.current);
-            }
-          }
-        });
-      },
-      {
-        rootMargin: '300px',
-      }
-    );
-
-    if (internalRef.current) {
-      observer.observe(internalRef.current);
-    }
-
-    return () => {
-      if (internalRef.current) {
-        observer.unobserve(internalRef.current);
-      }
-    };
-  }, [hero]);
-
   return (
     <img
       ref={setRefs}
       className={`lazy-img ${className}`}
-      src={isLoaded ? optimizedSrc : undefined}
-      data-src={!isLoaded ? optimizedSrc : undefined}
+      src={optimizedSrc}
       alt={alt || "Image"}
       width={width}
       height={height}
       loading={hero ? "eager" : "lazy"}
       decoding="async"
       fetchPriority={hero ? "high" : "auto"}
+      referrerPolicy="no-referrer"
       {...props}
     />
   );
