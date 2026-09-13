@@ -534,7 +534,11 @@ export default function Collections() {
                                     <span className="text-xs font-bold text-red-500">({fragrancePricing.perfume.maxDiscount}% OFF)</span>
                                   </div>
                                 </div>
-                              ) : product.priceOnRequest ? null : (
+                              ) : product.priceOnRequest ? (
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-sm md:text-base font-serif font-bold text-gold">Price on Request</span>
+                                </div>
+                              ) : (
                                 <div className="flex items-baseline gap-2">
                                   <span className="text-base md:text-xl font-serif font-bold text-charcoal">₹{(product.price || 0).toLocaleString()}</span>
                                   {product.discount > 0 && (

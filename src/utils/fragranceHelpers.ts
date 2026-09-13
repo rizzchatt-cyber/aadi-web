@@ -59,10 +59,15 @@ export function isJewelleryProduct(prod: any): boolean {
 export function isFragranceProduct(prod: any): boolean {
     if (!prod) return false;
 
+    // If fragranceOptions is explicitly disabled on the product
+    if (prod.fragranceOptions?.enabled === false) {
+        return false;
+    }
+
     // If explicitly jewellery, then not fragrance
     if (isJewelleryProduct(prod)) return false;
 
-    // All non-jewellery items (Flora, Royal Saffron, Mitti Attar, etc.) are fragrance products!
+    // All non-jewellery items (Flora, Royal Saffron, Mitti Attar, etc.) are fragrance products unless disabled
     return true;
 }
 

@@ -319,7 +319,9 @@ export default function Home() {
                                 <span className="text-xs font-bold text-red-500">({fragrancePricing.perfume.maxDiscount}% OFF)</span>
                               </div>
                             </div>
-                          ) : product.priceOnRequest ? null : (
+                          ) : product.priceOnRequest ? (
+                            <span className="text-sm md:text-base font-serif font-bold text-gold">Price on Request</span>
+                          ) : (
                             <span className="text-base md:text-xl font-serif font-bold text-charcoal tracking-tighter">₹{(product.price || 0).toLocaleString()}</span>
                           )}
                         </div>
