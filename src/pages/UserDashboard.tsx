@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc, addDoc, getDoc } from 'firebase/firestore';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import { isFragranceProduct } from '../utils/fragranceHelpers';
 
 export default function UserDashboard() {
     const { user, role } = useAuth();
@@ -26,11 +27,15 @@ export default function UserDashboard() {
         setIsShippingOpen(true);
     };
 
+    const hasFragranceInCart = purchasableItems.some(item => isFragranceProduct(item));
+    const cartCodFee = (hasFragranceInCart) ? 50 : 0;
+
     const handleShippingSubmit = async (addressData: AddressData) => {
         if (purchasableItems.length === 0) return;
         setIsSubmitting(true);
 
         const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
+        const finalTotalAmount = addressData.paymentMethod === 'cod' ? totalAmount + cartCodFee : totalAmount;
 
         if (addressData.paymentMethod === 'cod') {
             const codPaymentId = `COD_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -50,7 +55,7 @@ export default function UserDashboard() {
                         imageUrl: item.imageUrl || '',
                         quantity: 1
                     })),
-                    totalAmount: totalAmount,
+                    totalAmount: finalTotalAmount,
                     status: 'cod_pending',
                     createdAt: new Date().toISOString()
                 });
@@ -157,7 +162,9 @@ export default function UserDashboard() {
             try {
                 const codList = await Promise.all(purchasableItems.map(async (item) => {
                     const docSnap = await getDoc(doc(db, "products", item.productId));
-                    return docSnap.exists() && docSnap.data().codAvailable;
+                    if (!docSnap.exists()) return false;
+                    const prodData = docSnap.data();
+                    return isFragranceProduct(prodData) || prodData.codAvailable === true;
                 }));
                 setCodAvailable(codList.every(v => v === true));
             } catch (err) {
@@ -509,6 +516,7 @@ export default function UserDashboard() {
                 defaultEmail={user?.email || ''}
                 codAvailable={codAvailable}
                 price={totalAmount}
+                isFragrance={hasFragranceInCart}
             />
         </div>
     );

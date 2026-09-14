@@ -118,7 +118,10 @@ export default function Collections() {
     setIsSubmitting(true);
 
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
-    const finalPrice = selectedVariant ? selectedVariant.price : (selectedProduct.price || 0);
+    const basePrice = selectedVariant ? selectedVariant.price : (selectedProduct.price || 0);
+    const isFragrance = isFragranceProduct(selectedProduct);
+    const codFee = (addressData.paymentMethod === 'cod' && isFragrance) ? 50 : 0;
+    const finalPrice = basePrice + codFee;
     const itemTitle = selectedVariant 
       ? `${selectedProduct.title} (${selectedVariant.type} • ${selectedVariant.size})`
       : selectedProduct.title;
@@ -566,7 +569,7 @@ export default function Collections() {
                               </motion.button>
                               <a
                                 onClick={(e) => e.stopPropagation()}
-                                href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Attar Starting ₹199 / Perfume Starting ₹549). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
+                                href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Attar Starting ₹${fragrancePricing?.attar?.minPrice || 249} / Perfume Starting ₹${fragrancePricing?.perfume?.minPrice || 599}). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="p-2.5 md:p-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl md:rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
@@ -664,9 +667,10 @@ export default function Collections() {
         orderSuccessId={orderSuccessId}
         defaultName={user?.displayName || ''}
         defaultEmail={user?.email || ''}
-        codAvailable={selectedProduct?.codAvailable || false}
+        codAvailable={isFragranceProduct(selectedProduct) ? true : (selectedProduct?.codAvailable || false)}
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
         selectedVariant={selectedVariant}
+        isFragrance={isFragranceProduct(selectedProduct)}
       />
     </motion.div>
   );

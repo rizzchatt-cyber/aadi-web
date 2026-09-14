@@ -23,6 +23,11 @@ import {
     Copy,
     Check,
     Bell,
+    BellRing,
+    BellOff,
+    Volume2,
+    AlertTriangle,
+    CheckCircle2,
     Clock,
     CreditCard,
     Coins,
@@ -109,8 +114,45 @@ export default function AdminDashboard() {
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
     const [orderFilter, setOrderFilter] = useState('all');
     const [notifications, setNotifications] = useState<{ id: string; orderId: string; message: string }[]>([]);
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
+        typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
+    );
     const prevOrderIdsRef = useRef<string[]>([]);
     const isInitialLoadRef = useRef(true);
+
+    const handleRequestNotificationPermission = async () => {
+        if (!('Notification' in window)) {
+            alert('Desktop notifications are not supported by your browser.');
+            return;
+        }
+        try {
+            const permission = await Notification.requestPermission();
+            setNotificationPermission(permission);
+            if (permission === 'granted') {
+                playChime();
+                showOrderNotification('permission-granted', 'Desktop notifications enabled! You will be alerted when new orders arrive.');
+                new Notification('🔔 Notifications Enabled!', {
+                    body: 'You will now receive real-time desktop alerts whenever a new order is placed.',
+                    icon: '/favicon.ico'
+                });
+            } else if (permission === 'denied') {
+                alert('Notification permission was blocked. Please unblock notifications in your browser location/site settings.');
+            }
+        } catch (err) {
+            console.error('Error requesting notification permission:', err);
+        }
+    };
+
+    const handleTestNotification = () => {
+        playChime();
+        showOrderNotification('test-order-alert', 'Test Order Notification: Audio chime & desktop alert working!');
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('🛒 Test Order Alert!', {
+                body: 'New Order from Demo Customer for "Aaditya Royal Attar" (₹1,999)',
+                icon: '/favicon.ico'
+            });
+        }
+    };
 
     const playChime = () => {
         try {
@@ -285,7 +327,7 @@ export default function AdminDashboard() {
         ].filter((p: any) => p && typeof p === 'number' && p > 0);
         const allPrices = [...attarPrices, ...perfumePrices];
         if (allPrices.length > 0) return Math.min(...allPrices);
-        return 199;
+        return 249;
     };
 
     // Auto-sync: untick priceOnRequest for all fragrance products in Firestore
@@ -426,8 +468,22 @@ export default function AdminDashboard() {
                     playChime();
                     newOrders.forEach(newOrder => {
                         const itemTitle = newOrder.items?.[0]?.productTitle || 'exquisite piece';
-                        const message = `New Order from ${newOrder.userName || 'Guest'} for "${itemTitle}"!`;
+                        const amountStr = newOrder.totalAmount ? ` (₹${newOrder.totalAmount.toLocaleString()})` : '';
+                        const message = `New Order from ${newOrder.userName || 'Customer'} for "${itemTitle}"${amountStr}!`;
+                        
                         showOrderNotification(newOrder.id, message);
+
+                        if ('Notification' in window && Notification.permission === 'granted') {
+                            try {
+                                new Notification('🛍️ New Order Received!', {
+                                    body: `${newOrder.userName || 'Customer'} placed an order for "${itemTitle}"${amountStr}.`,
+                                    icon: '/favicon.ico',
+                                    tag: newOrder.id
+                                });
+                            } catch (e) {
+                                console.error('Failed to trigger desktop notification:', e);
+                            }
+                        }
                     });
                 }
             } else {
@@ -1374,7 +1430,40 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Quick Action Button */}
-                    <div className="flex gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
+                        {/* Order Notification Status & Trigger Button */}
+                        {notificationPermission === 'granted' ? (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleTestNotification}
+                                className="px-4 py-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-wider shadow-sm hover:bg-emerald-500/20 transition-all cursor-pointer"
+                                title="Click to test order audio chime & desktop alert"
+                            >
+                                <BellRing size={16} className="text-emerald-600 animate-pulse" />
+                                <span>Order Alerts Active</span>
+                            </motion.button>
+                        ) : notificationPermission === 'denied' ? (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => alert('Notifications are blocked by your browser settings. Please click the site info/lock icon next to the URL bar and set Notifications to Allow.')}
+                                className="px-4 py-3.5 bg-red-500/10 border border-red-500/30 text-red-700 font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-wider cursor-pointer"
+                            >
+                                <BellOff size={16} className="text-red-600" />
+                                <span>Alerts Blocked</span>
+                            </motion.button>
+                        ) : (
+                            <motion.button
+                                whileHover={{ scale: 1.03 }}
+                                whileTap={{ scale: 0.97 }}
+                                onClick={handleRequestNotificationPermission}
+                                className="px-5 py-3.5 gold-gradient text-white font-bold rounded-2xl text-xs flex items-center gap-2 uppercase tracking-widest shadow-lg shadow-gold/20 shimmer cursor-pointer"
+                            >
+                                <Bell size={16} className="animate-bounce" />
+                                <span>Allow Order Notifications</span>
+                            </motion.button>
+                        )}
                         {activeTab === 'products' && (
                             <div className="flex gap-3">
                                 <motion.button
@@ -2060,7 +2149,80 @@ export default function AdminDashboard() {
                                 </div>
                             </div>
 
+                            {/* Real-time Order Desktop & Audio Notifications */}
+                            <div className="max-w-2xl bg-white border border-gold/10 p-8 md:p-12 rounded-[40px] shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                                            <BellRing size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-serif text-2xl text-charcoal">Real-time Order Alerts</h3>
+                                            <p className="text-xs text-charcoal/40">Browser Popups & Audio Chimes for Incoming Orders</p>
+                                        </div>
+                                    </div>
+                                    <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-full border self-start sm:self-auto ${
+                                        notificationPermission === 'granted' 
+                                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                                            : notificationPermission === 'denied'
+                                            ? 'bg-red-50 text-red-600 border-red-200'
+                                            : 'bg-amber-50 text-amber-600 border-amber-200'
+                                    }`}>
+                                        {notificationPermission === 'granted' ? 'Granted' : notificationPermission === 'denied' ? 'Blocked' : 'Action Required'}
+                                    </span>
+                                </div>
+                                
+                                <p className="text-sm text-charcoal/60 leading-relaxed mb-6">
+                                    Allow desktop browser notifications so you never miss a new order—even when working in another tab or application. When a customer completes checkout, your browser will play a pleasant chime sound and display a desktop notification popup.
+                                </p>
 
+                                <div className="space-y-4">
+                                    {notificationPermission !== 'granted' && (
+                                        <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-start gap-3">
+                                            <AlertTriangle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                                            <div className="text-xs text-amber-900 leading-relaxed">
+                                                {notificationPermission === 'denied' ? (
+                                                    <span>Desktop notifications are currently <strong>blocked</strong> by your browser settings. Please click the site lock/settings icon near your browser address bar and set Notifications to <strong>Allow</strong>.</span>
+                                                ) : (
+                                                    <span>Desktop notification permission has not been granted yet. Click below to trigger the browser prompt and enable instant order popups.</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {notificationPermission === 'granted' && (
+                                        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center gap-3">
+                                            <CheckCircle2 className="text-emerald-600 shrink-0" size={18} />
+                                            <span className="text-xs text-emerald-900 font-medium">
+                                                Desktop notifications are enabled and active. Native popups & audio chime will trigger automatically on new orders.
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <div className="flex flex-wrap gap-4 pt-2">
+                                        {notificationPermission !== 'granted' && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={handleRequestNotificationPermission}
+                                                className="flex-1 py-4 gold-gradient text-white font-bold rounded-2xl text-xs uppercase tracking-widest shadow-lg shadow-gold/20 shimmer flex items-center justify-center gap-2 cursor-pointer"
+                                            >
+                                                <Bell size={16} />
+                                                Allow Order Notifications
+                                            </motion.button>
+                                        )}
+                                        <motion.button
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={handleTestNotification}
+                                            className="py-4 px-6 bg-charcoal text-white font-bold rounded-2xl text-xs uppercase tracking-widest hover:bg-charcoal/90 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                                        >
+                                            <Volume2 size={16} />
+                                            Test Sound & Popup
+                                        </motion.button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     )}
 

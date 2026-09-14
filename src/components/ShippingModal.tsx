@@ -34,6 +34,7 @@ interface ShippingModalProps {
         typeLabel?: string;
         sizeLabel?: string;
     } | null;
+    isFragrance?: boolean;
 }
 
 interface Particle {
@@ -58,7 +59,8 @@ export default function ShippingModal({
     defaultEmail = '',
     codAvailable = false,
     price = 0,
-    selectedVariant = null
+    selectedVariant = null,
+    isFragrance = false
 }: ShippingModalProps) {
     const [step, setStep] = useState<1 | 2 | 2.5 | 3>(1);
     const [formData, setFormData] = useState<AddressData>({
@@ -72,6 +74,10 @@ export default function ShippingModal({
         pinCode: '',
         paymentMethod: 'razorpay'
     });
+
+    const isFragranceOrder = isFragrance || !!selectedVariant;
+    const codFee = (formData.paymentMethod === 'cod' && isFragranceOrder) ? 50 : 0;
+    const finalDisplayPrice = price + codFee;
 
     const [error, setError] = useState('');
     const [particles, setParticles] = useState<Particle[]>([]);
@@ -533,6 +539,18 @@ export default function ShippingModal({
                                         )}
                                         <p className="text-xs font-bold text-charcoal">{formData.fullName} • {formData.phone}</p>
                                         <p className="text-xs text-charcoal/60 truncate">{formData.addressLine1}, {formData.addressLine2 && `${formData.addressLine2}, `}{formData.city}, {formData.state} - {formData.pinCode}</p>
+                                        {formData.paymentMethod === 'cod' && isFragranceOrder && (
+                                            <div className="pt-2 mt-2 border-t border-gold/10 flex justify-between items-center text-xs">
+                                                <span className="font-semibold text-amber-800 flex items-center gap-1">
+                                                    Fragrance COD Fee:
+                                                </span>
+                                                <span className="font-bold text-amber-800">+₹50</span>
+                                            </div>
+                                        )}
+                                        <div className="pt-1 mt-1 border-t border-gold/10 flex justify-between items-center text-xs font-bold">
+                                            <span className="text-charcoal/60">Total Payable:</span>
+                                            <span className="text-sm font-serif font-black text-gold">₹{finalDisplayPrice.toLocaleString()}</span>
+                                        </div>
                                     </div>
 
                                     {/* Payment Options Header */}
@@ -575,8 +593,17 @@ export default function ShippingModal({
                                                         <Home size={18} />
                                                     </div>
                                                     <div>
-                                                        <p className="font-bold text-charcoal text-xs">Cash on Delivery</p>
-                                                        <p className="text-[9px] text-charcoal/40 font-normal">Pay cash at your doorstep</p>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <p className="font-bold text-charcoal text-xs">Cash on Delivery</p>
+                                                            {isFragranceOrder && (
+                                                                <span className="text-[8px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-full">
+                                                                    +₹50 COD Fee
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[9px] text-charcoal/40 font-normal">
+                                                            {isFragranceOrder ? 'Pay cash at doorstep (+₹50 COD fee)' : 'Pay cash at your doorstep'}
+                                                        </p>
                                                     </div>
                                                 </button>
                                             ) : (
@@ -616,7 +643,7 @@ export default function ShippingModal({
                                                 </>
                                             ) : (
                                                 formData.paymentMethod === 'cod' 
-                                                    ? 'Place COD Order' 
+                                                    ? `Place COD Order • ₹${finalDisplayPrice.toLocaleString()}` 
                                                     : formData.paymentMethod === 'upi' 
                                                         ? 'Generate UPI QR Code' 
                                                         : 'Pay with Razorpay'
