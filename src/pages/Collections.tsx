@@ -352,7 +352,7 @@ export default function Collections() {
                       <div className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl p-1 transition-all duration-300 ${activeCategory === cat.id ? 'bg-gold shadow-xl shadow-gold/20 -translate-y-2' : 'bg-transparent hover:bg-gold/10 hover:-translate-y-1'}`}>
                         <div className="w-full h-full rounded-2xl overflow-hidden bg-[#Fdfbf7] border border-gold/10">
                           {cat.imageUrl ? (
-                            <LazyImage src={cat.imageUrl} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            <LazyImage src={getOptimizedImageUrl(cat.imageUrl, 250)} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-gold/30 group-hover:text-gold/60 transition-colors">
                               <LayoutGrid size={24} />
@@ -412,7 +412,7 @@ export default function Collections() {
                         }`}
                     >
                       {sub.imageUrl && (
-                        <LazyImage src={sub.imageUrl} alt={sub.name} className="w-5 h-5 rounded-full object-cover border border-white/30" />
+                        <LazyImage src={getOptimizedImageUrl(sub.imageUrl, 250)} alt={sub.name} className="w-5 h-5 rounded-full object-cover border border-white/30" />
                       )}
                       {sub.name}
                     </motion.button>
@@ -467,13 +467,15 @@ export default function Collections() {
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.4, delay: (idx % 4) * 0.07, ease: [0.16, 1, 0.3, 1] }}
                       className="product-card bg-white rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-gold/10 hover:-translate-y-1.5 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col group relative cursor-pointer transform-gpu"
-                      onClick={() => navigate(`/product/${product.id}`)}
+                      onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
                     >
                       <div className="relative aspect-square overflow-hidden bg-luxury-white">
                         <DriveImage
                           src={product.images?.[0]}
                           alt={product.title}
-                          priority={idx < 4}
+                          priority={idx < 6}
+                          initialSize={120}
+                          maxSize={400}
                           className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
                         />
 
@@ -552,45 +554,22 @@ export default function Collections() {
                             </div>
                           </div>
 
-
                         <div className="flex gap-2">
-                          {isFragranceProduct(product) ? (
-                            <>
-                              <motion.button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleShopNow(product);
-                                }}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                className="flex-1 py-2.5 md:py-3 gold-gradient text-white text-[8px] md:text-[10px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
-                              >
-                                Shop Now
-                              </motion.button>
-                              <a
-                                onClick={(e) => e.stopPropagation()}
-                                href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Attar Starting ₹${fragrancePricing?.attar?.minPrice || 249} / Perfume Starting ₹${fragrancePricing?.perfume?.minPrice || 599}). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2.5 md:p-3 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl md:rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
-                                aria-label={`Order ${product.title} on WhatsApp`}
-                                title="Order on WhatsApp"
-                              >
-                                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.224-3.826l.37.22c1.497.89 3.212 1.36 4.97 1.361h.005c5.805 0 10.529-4.73 10.533-10.541.002-2.81-1.093-5.45-3.08-7.44C17.09 1.83 14.45 .73 11.65.731c-5.838 0-10.589 4.75-10.593 10.56-.001 1.83.479 3.618 1.386 5.17l.244.417-.98 3.578 3.655-.959z" />
-                                </svg>
-                              </a>
-                            </>
-                          ) : (
-                            <motion.button
-                              onClick={() => navigate(`/product/${product.id}`)}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="w-full py-2.5 md:py-3 gold-gradient text-white text-[8px] md:text-[10px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
-                            >
-                              Details <ChevronRight size={10} />
-                            </motion.button>
-                          )}
+                          <motion.button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (isFragranceProduct(product)) {
+                                handleShopNow(product);
+                              } else {
+                                navigate(`/product/${product.id}`, { state: { product } });
+                              }
+                            }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="w-full py-2.5 md:py-3 gold-gradient text-white text-[9px] md:text-[11px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
+                          >
+                            {isFragranceProduct(product) ? 'Shop Now' : 'View Details'} <ChevronRight size={12} />
+                          </motion.button>
                         </div>
                       </div>
                     </div>

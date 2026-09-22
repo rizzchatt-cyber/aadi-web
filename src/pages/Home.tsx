@@ -260,7 +260,7 @@ export default function Home() {
                   className="group flex flex-col relative"
                 >
                   <motion.div
-                    onClick={() => navigate(`/product/${product.id}`)}
+                    onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
                     className="bg-white rounded-[24px] overflow-hidden border border-gold/5 shadow-premium hover:shadow-luxury hover:-translate-y-2 hover:scale-[1.01] transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col h-full cursor-pointer transform-gpu"
                   >
                     <div className="relative aspect-square overflow-hidden bg-gray-50">
@@ -268,6 +268,8 @@ export default function Home() {
                         src={product.images?.[0]}
                         alt={product.title}
                         priority={idx === 0}
+                        initialSize={120}
+                        maxSize={400}
                         className="w-full h-full object-contain p-4 object-center group-hover:scale-110 transition-transform duration-[2s] ease-[cubic-bezier(0.2,1,0.3,1)]"
                       />
                       <div className="absolute inset-0 bg-linear-to-t from-gold/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
@@ -288,11 +290,10 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Three Dots - "three dots" as requested */}
+                      {/* Three Dots */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Action for sharing or menu
                         }}
                         className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-white"
                         aria-label="More options"
@@ -329,48 +330,26 @@ export default function Home() {
                           )}
                         </div>
 
-                      {product.priceOnRequest && !isFragranceProduct(product) ? (
-                        <a
-                          onClick={(e) => e.stopPropagation()}
-                          href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (Exclusive Pricing via WhatsApp). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-full py-2.5 bg-[#25D366] text-white text-[10px] font-bold rounded-xl shadow-md hover:bg-[#128C7E] transition-all flex items-center justify-center gap-2 uppercase tracking-wider text-center"
-                          aria-label={`Order ${product.title} on WhatsApp`}
-                        >
-                          Order Now
-                        </a>
-                      ) : (
                         <div className="flex gap-2 w-full">
                           <motion.button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleShopNow(product);
+                              if (isFragranceProduct(product)) {
+                                handleShopNow(product);
+                              } else {
+                                navigate(`/product/${product.id}`, { state: { product } });
+                              }
                             }}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
-                            className="flex-1 py-2.5 gold-gradient text-white text-[10px] font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1 uppercase tracking-wider shimmer relative overflow-hidden cursor-pointer"
+                            className="w-full py-2.5 gold-gradient text-white text-[10px] font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-1 uppercase tracking-wider shimmer relative overflow-hidden cursor-pointer"
                           >
-                            Shop Now
+                            {isFragranceProduct(product) ? 'Shop Now' : 'View Details'} <ChevronRight size={12} />
                           </motion.button>
-                          <a
-                            onClick={(e) => e.stopPropagation()}
-                            href={`https://wa.me/918653535303?text=${encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (₹${(product.price || 0).toLocaleString()}). Please provide more details. Image: ${product.images?.[0] || ''}`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-2.5 bg-[#25D366] hover:bg-[#128C7E] text-white rounded-xl shadow-md transition-all flex items-center justify-center"
-                            aria-label={`Order ${product.title} on WhatsApp`}
-                            title="Order on WhatsApp"
-                          >
-                            <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.224-3.826l.37.22c1.497.89 3.212 1.36 4.97 1.361h.005c5.805 0 10.529-4.73 10.533-10.541.002-2.81-1.093-5.45-3.08-7.44C17.09 1.83 14.45 .73 11.65.731c-5.838 0-10.589 4.75-10.593 10.56-.001 1.83.479 3.618 1.386 5.17l.244.417-.98 3.578 3.655-.959z" />
-                            </svg>
-                          </a>
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
               </motion.div>
             );
           }) : (

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import HLSVideo from './HLSVideo';
-import { LazyImage } from './LazyImage';
+import DriveImage from './DriveImage';
 import { getOptimizedImageUrl } from '../utils/imageFormatter';
 
 interface Banner {
@@ -70,18 +70,17 @@ export default function CarouselBanner({ banners, showTitles = true, forceSharp 
                             }}
                         />
                     ) : (
-                        <LazyImage
-                            src={getOptimizedImageUrl(banner.image_path) || 'https://placehold.co/1200x400?text=Aadityas+Aura'}
+                        <DriveImage
+                            src={banner.image_path}
                             alt={banner.title}
-                            hero={idx === 0}
+                            priority={idx === 0}
+                            initialSize={600}
+                            maxSize={1200}
                             className="w-full h-full"
                             style={{ 
                                 objectFit: (window.innerWidth < 768 ? (banner.mobileObjectFit || banner.objectFit) : banner.objectFit) || 'cover'
                             } as any}
-                            onLoad={() => setLoaded(p => ({ ...p, [idx]: true }))}
-                            onError={(e) => {
-                                (e.target as HTMLImageElement).src = 'https://placehold.co/1200x400?text=Aadityas+Aura';
-                            }}
+                            onError={() => setLoaded(p => ({ ...p, [idx]: true }))}
                         />
                     )}
                     {/* Shimmer while loading */}

@@ -199,28 +199,20 @@ export default function AutoScrollingGallery({ heroTextColor }: AutoScrollingGal
   return (
     <div className="relative w-[86%] sm:w-[90%] md:w-full aspect-[9/16] overflow-visible select-none mx-auto">
       
-      {/* Ambient Reflection Backdrop - Smoothly cross-fading blurred backdrops */}
+      {/* Ambient Reflection Backdrop - Blurred active backdrop */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none rounded-2xl">
-        {GALLERY_IMAGES.map((img, idx) => {
-          const isActive = idx === index;
-          return (
-            <div
-              key={`bg-${img.id}`}
-              className="absolute inset-0"
-              style={{
-                opacity: isActive ? 0.5 : 0,
-                transition: 'opacity 1000ms ease-in-out',
-                zIndex: isActive ? 2 : 1
-              }}
-            >
-              <DriveImage
-                src={`https://drive.google.com/file/d/${img.id}/view`}
-                alt=""
-                className="w-full h-full object-cover blur-[8px] scale-105"
-              />
-            </div>
-          );
-        })}
+        {currentImage && (
+          <div key={`bg-${currentImage.id}`} className="absolute inset-0 opacity-50">
+            <DriveImage
+              src={`https://drive.google.com/file/d/${currentImage.id}/view`}
+              alt=""
+              initialSize={120}
+              maxSize={400}
+              priority={true}
+              className="w-full h-full object-cover blur-[8px] scale-105"
+            />
+          </div>
+        )}
         <div className="absolute inset-0 bg-black/15 z-[3]" />
       </div>
 
@@ -234,6 +226,9 @@ export default function AutoScrollingGallery({ heroTextColor }: AutoScrollingGal
           const len = GALLERY_IMAGES.length;
           if (diff < -len / 2) diff += len;
           if (diff > len / 2) diff -= len;
+
+          const isNearby = Math.abs(diff) <= 1;
+
           return (
             <motion.div
               key={img.id}
@@ -254,12 +249,16 @@ export default function AutoScrollingGallery({ heroTextColor }: AutoScrollingGal
               }}
               className="absolute left-0 top-0 w-full h-full rounded-2xl overflow-hidden bg-zinc-900 border-4 border-gold shadow-luxury cursor-pointer transform-gpu"
             >
-              <DriveImage
-                src={`https://drive.google.com/file/d/${img.id}/view`}
-                alt={img.title}
-                className="w-full h-full object-cover"
-                priority={isCenter}
-              />
+              {isNearby && (
+                <DriveImage
+                  src={`https://drive.google.com/file/d/${img.id}/view`}
+                  alt={img.title}
+                  initialSize={120}
+                  maxSize={500}
+                  className="w-full h-full object-cover"
+                  priority={isCenter}
+                />
+              )}
               
               {/* Dark Gradient Overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none" />

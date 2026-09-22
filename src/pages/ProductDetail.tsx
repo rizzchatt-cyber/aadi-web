@@ -30,8 +30,11 @@ export default function ProductDetail() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
-    const [product, setProduct] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    
+    // Instant initial state from location.state if navigated from product card!
+    const passedProduct = location.state?.product;
+    const [product, setProduct] = useState<any>(passedProduct || null);
+    const [loading, setLoading] = useState(!passedProduct);
     const [activeImage, setActiveImage] = useState(0);
     const [isZoomed, setIsZoomed] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -278,6 +281,8 @@ export default function ProductDetail() {
                                 <DriveImage
                                     src={product.images?.[activeImage]}
                                     alt={product.title}
+                                    maxSize={1000}
+                                    priority={true}
                                     className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                                 />
                             </div>
@@ -310,7 +315,7 @@ export default function ProductDetail() {
                                         className={`w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all flex-shrink-0 ${activeImage === idx ? 'border-gold shadow-lg shadow-gold/20' : 'border-gold/10 opacity-60 hover:opacity-100'
                                             }`}
                                     >
-                                        <DriveImage src={img} alt="" className="w-full h-full object-contain" />
+                                        <DriveImage src={img} alt="" maxSize={250} className="w-full h-full object-contain" />
                                     </button>
                                 ))}
                             </div>
@@ -358,17 +363,17 @@ export default function ProductDetail() {
                                         </div>
                                     </div>
                                 ) : product.priceOnRequest ? (
-                                    <div className="flex flex-col gap-4">
-                                        <p className="text-2xl md:text-3xl font-serif text-gold font-bold">Exclusive Pricing via WhatsApp</p>
+                                    <div className="flex flex-col gap-3">
+                                        <p className="text-xl md:text-2xl font-serif text-gold font-bold">Exclusive Pricing via Owner Consultation</p>
                                         <motion.a
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             href={getWhatsAppLink()}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="px-6 py-3 bg-[#25D366] text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-green-500/10 flex items-center justify-center gap-2 w-fit"
+                                            className="px-6 py-3.5 bg-gradient-to-r from-[#128C7E] to-[#075E54] text-white text-[10px] font-bold uppercase tracking-[0.15em] rounded-xl shadow-lg flex items-center justify-center gap-2 w-fit border border-emerald-400/30 cursor-pointer"
                                         >
-                                            <MessageCircle size={16} /> Order on WhatsApp
+                                            <MessageCircle size={16} className="text-amber-300" /> Ask Aaditya Soni for Price
                                         </motion.a>
                                     </div>
                                 ) : (
@@ -473,15 +478,18 @@ export default function ProductDetail() {
                             )}
                             <div className="flex flex-col sm:flex-row gap-4">
                                 <motion.a
-                                    whileHover={{ scale: 1.02, backgroundColor: '#128C7E' }}
+                                    whileHover={{ scale: 1.02, backgroundColor: '#0F7A6E' }}
                                     whileTap={{ scale: 0.98 }}
                                     href={getWhatsAppLink()}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex-grow py-5 bg-[#25D366] text-white font-bold rounded-2xl shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 transition-all"
+                                    className="flex-grow py-4 px-6 bg-gradient-to-r from-[#128C7E] via-[#0D7367] to-[#075E54] text-white font-bold rounded-2xl shadow-xl shadow-emerald-900/20 flex flex-col items-center justify-center gap-0.5 transition-all border border-emerald-400/30 cursor-pointer"
                                 >
-                                    <MessageCircle size={24} />
-                                    Order on WhatsApp
+                                    <div className="flex items-center gap-2 text-sm md:text-base">
+                                        <MessageCircle size={20} className="text-amber-300" />
+                                        <span>Ask Aaditya Soni</span>
+                                    </div>
+                                    <span className="text-[10px] font-normal text-amber-200/90 tracking-wide">Direct guidance & custom orders</span>
                                 </motion.a>
                                 <motion.button
                                     whileHover={{ scale: 1.03 }}
@@ -516,6 +524,8 @@ export default function ProductDetail() {
                         <DriveImage
                             src={product.images?.[activeImage]}
                             alt={product.title}
+                            maxSize={1000}
+                            priority={true}
                             className="max-w-full max-h-full object-contain rounded-2xl"
                         />
                     </motion.div>

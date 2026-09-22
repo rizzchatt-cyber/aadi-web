@@ -349,6 +349,7 @@ export default function Gallery() {
                       <DriveImage
                         src={`https://drive.google.com/file/d/${galleryImages[selectedImage].id}/view`}
                         alt={galleryImages[selectedImage].title}
+                        maxSize={1000}
                         className="max-h-[40vh] md:max-h-[70vh] w-auto object-contain rounded-md"
                         priority={true}
                       />
