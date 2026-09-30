@@ -1,10 +1,11 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import AnnouncementBar from './components/AnnouncementBar';
 import SocialBubbles from './components/SocialBubbles';
+import WhatsAppBottomPopup from './components/WhatsAppBottomPopup';
 import { AuthProvider } from './context/AuthContext';
 
 // Pages
@@ -84,8 +85,8 @@ export default function App() {
 
 function AppContent() {
   const location = useLocation();
-  const navigate = useNavigate();
   const isHome = location.pathname === '/';
+  const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <div className="relative min-h-[100dvh] bg-luxury-white">
@@ -98,27 +99,10 @@ function AppContent() {
         </main>
 
         {isHome && <Footer />}
-
-        {/* Sticky Mobile Order Button - Only on Home */}
-        <AnimatePresence>
-          {isHome && (
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              className="fixed bottom-6 left-0 right-0 z-40 px-6 md:hidden"
-            >
-              <button
-                onClick={() => navigate('/collections')}
-                className="w-full py-4 gold-gradient text-luxury-white font-bold rounded-full shadow-[0_15px_35px_rgba(191,149,63,0.4)] hover:shadow-[0_20px_40px_rgba(191,149,63,0.6)] transition-all shimmer relative overflow-hidden active:scale-95"
-              >
-                Order Now
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {isHome && <SocialBubbles />}
+
+        {/* Mobile-Only WhatsApp Bottom Popup Bar */}
+        {!isAdmin && <WhatsAppBottomPopup />}
       </div>
     </div>
   );

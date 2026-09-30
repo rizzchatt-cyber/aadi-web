@@ -7,7 +7,7 @@ export default function SocialBubbles() {
     const instagramLink = "https://instagram.com/aadityas.aura";
 
     return (
-        <div className="fixed bottom-28 md:bottom-6 right-6 z-50 flex flex-col gap-3">
+        <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-40 flex flex-col gap-3">
             {/* Instagram */}
             <motion.a
                 href={instagramLink}
