@@ -23,6 +23,7 @@ import { LazyImage } from '../components/LazyImage';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
+import ProductShareModal, { ShareProductData } from '../components/ProductShareModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
@@ -43,6 +44,13 @@ export default function Collections() {
   const [isShippingOpen, setIsShippingOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [shareProduct, setShareProduct] = useState<ShareProductData | null>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const handleOpenShare = (prod: any) => {
+    setShareProduct(prod);
+    setIsShareOpen(true);
+  };
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
 
   // Derived category lists
@@ -497,16 +505,13 @@ export default function Collections() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (navigator.share) {
-                              navigator.share({
-                                title: product.title,
-                                url: window.location.origin + `/product/${product.id}`
-                              });
-                            }
+                            handleOpenShare(product);
                           }}
-                          className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-white/80 backdrop-blur-md shadow-sm flex items-center justify-center text-charcoal/40 hover:text-gold hover:bg-white transition-all opacity-0 group-hover:opacity-100"
+                          className="absolute top-4 right-4 z-10 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-gold/20 flex items-center justify-center text-charcoal/70 hover:text-gold hover:bg-white transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer active:scale-90"
+                          aria-label="Share product"
+                          title="Share product"
                         >
-                          <Share2 size={16} />
+                          <Share2 size={15} />
                         </button>
                       </div>
 
@@ -671,6 +676,11 @@ export default function Collections() {
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
         selectedVariant={selectedVariant}
         isFragrance={isFragranceProduct(selectedProduct)}
+      />
+      <ProductShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        product={shareProduct}
       />
     </motion.div>
   );

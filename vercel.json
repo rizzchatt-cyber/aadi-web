@@ -1,6 +1,17 @@
 {
     "rewrites": [
         {
+            "source": "/product/:id",
+            "has": [
+                {
+                    "type": "header",
+                    "key": "user-agent",
+                    "value": ".*([wW]hats[aA]pp|[fF]acebookexternalhit|[fF]acebot|[tT]witterbot|[tT]elegram[bB]ot|[sS]lackbot|[dD]iscordbot|[aA]pplebot|[lL]inked[iI]n[bB]ot|[pP]interest|[bB]ot|[cC]rawler|[sS]pider|[sS]kype[uU]ri[pP]review|[qQ]uora|embedly|[yY]ahoo).*"
+                }
+            ],
+            "destination": "/api/og?id=:id"
+        },
+        {
             "source": "/api/:path*",
             "destination": "/api/:path*"
         },

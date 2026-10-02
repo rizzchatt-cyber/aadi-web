@@ -22,6 +22,7 @@ import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
+import ProductShareModal from '../components/ProductShareModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
@@ -33,6 +34,7 @@ export default function ProductDetail() {
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
+    const [isShareOpen, setIsShareOpen] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isFragranceModalOpen, setIsFragranceModalOpen] = useState(false);
@@ -59,6 +61,69 @@ export default function ProductDetail() {
         fetchProduct();
         window.scrollTo(0, 0);
     }, [id]);
+
+    useEffect(() => {
+        if (!product) return;
+
+        const originalTitle = document.title;
+        const pageTitle = `${product.title} | Aaditya's Aura`;
+        document.title = pageTitle;
+
+        const priceText = product.priceOnRequest
+            ? 'Price on Request'
+            : product.price
+            ? `₹${Number(product.price).toLocaleString('en-IN')}`
+            : '';
+
+        const primaryImage = product.images?.[0]
+            ? getOptimizedImageUrl(product.images[0])
+            : 'https://aadityasaura.com/logo.png';
+
+        const descriptionText = product.description
+            ? `${priceText ? priceText + ' • ' : ''}${String(product.description).replace(/\s+/g, ' ').trim().slice(0, 180)}`
+            : `${priceText ? priceText + ' - ' : ''}Discover ${product.title} at Aaditya's Aura. Pure Luxury Jewellery, Attar & Perfume.`;
+
+        const updateMeta = (attr: string, key: string, content: string) => {
+            let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
+            if (!el) {
+                el = document.createElement('meta');
+                el.setAttribute(attr, key);
+                document.head.appendChild(el);
+            }
+            el.setAttribute('content', content);
+        };
+
+        const currentUrl = window.location.href;
+
+        // Open Graph
+        updateMeta('property', 'og:title', pageTitle);
+        updateMeta('property', 'og:description', descriptionText);
+        updateMeta('property', 'og:image', primaryImage);
+        updateMeta('property', 'og:url', currentUrl);
+        updateMeta('property', 'og:type', 'product');
+
+        // Twitter Card
+        updateMeta('name', 'twitter:title', pageTitle);
+        updateMeta('name', 'twitter:description', descriptionText);
+        updateMeta('name', 'twitter:image', primaryImage);
+        updateMeta('name', 'twitter:card', 'summary_large_image');
+
+        // Canonical link
+        let canonicalEl = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+        if (!canonicalEl) {
+            canonicalEl = document.createElement('link');
+            canonicalEl.setAttribute('rel', 'canonical');
+            document.head.appendChild(canonicalEl);
+        }
+        canonicalEl.setAttribute('href', currentUrl);
+
+        return () => {
+            document.title = originalTitle;
+            updateMeta('property', 'og:title', "Aaditya’s Aura | Pure Luxury Jewellery, Attar & Perfume");
+            updateMeta('property', 'og:image', "https://aadityasaura.com/logo.png");
+            updateMeta('name', 'twitter:image', "https://aadityasaura.com/logo.png");
+        };
+    }, [product]);
 
     const handleAddToCart = async () => {
         if (!product) return;
@@ -289,6 +354,16 @@ export default function ProductDetail() {
                                 <Maximize2 size={24} />
                             </button>
 
+                            {/* Share button overlay */}
+                            <button
+                                onClick={() => setIsShareOpen(true)}
+                                className="absolute top-8 right-8 z-10 w-11 h-11 bg-white/90 backdrop-blur-md rounded-full text-charcoal/70 shadow-md border border-gold/25 flex items-center justify-center transition-all hover:bg-gold hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
+                                aria-label="Share product"
+                                title="Share product"
+                            >
+                                <Share2 size={18} />
+                            </button>
+
                             {isFragranceProduct(product) ? (
                                 <div className="absolute top-8 left-8 bg-red-600 text-white font-black px-4 py-2 rounded-xl shadow-xl text-lg">
                                     {fragrancePricing.overallMaxDiscount}% OFF
@@ -320,10 +395,17 @@ export default function ProductDetail() {
                     {/* Product Meta */}
                     <div className="flex flex-col">
                         <div className="mb-8">
-                            <div className="flex items-center gap-3 mb-4">
+                            <div className="flex items-center justify-between gap-3 mb-4">
                                 <span className="px-3 py-1 bg-gold/5 border border-gold/20 text-gold text-[10px] font-bold uppercase tracking-[0.2em] rounded-full">
                                     {product.material || 'Aura Selection'}
                                 </span>
+                                <button
+                                    onClick={() => setIsShareOpen(true)}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-gold/25 text-charcoal/70 hover:text-gold shadow-xs hover:shadow text-xs font-semibold transition-all active:scale-95 cursor-pointer"
+                                >
+                                    <Share2 size={13} className="text-gold" />
+                                    <span>Share</span>
+                                </button>
                             </div>
                             <h1 className="text-4xl md:text-5xl font-serif text-charcoal mb-4 leading-tight">{product.title}</h1>
                             <div className="flex items-center gap-4">
@@ -492,6 +574,17 @@ export default function ProductDetail() {
                                     <ShoppingCart size={24} />
                                     Add to Cart
                                 </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.03 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => setIsShareOpen(true)}
+                                    className="py-5 px-6 bg-luxury-cream border-2 border-gold/30 hover:border-gold text-charcoal font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 hover:bg-gold/10 transition-all cursor-pointer"
+                                    title="Share Masterpiece"
+                                    aria-label="Share Masterpiece"
+                                >
+                                    <Share2 size={22} className="text-gold" />
+                                    <span className="sm:hidden text-sm">Share</span>
+                                </motion.button>
                             </div>
                         </div>
                     </div>
@@ -554,6 +647,13 @@ export default function ProductDetail() {
                 price={selectedVariant ? selectedVariant.price : (product?.price || 0)}
                 selectedVariant={selectedVariant}
                 isFragrance={isFragranceProduct(product)}
+            />
+
+            {/* Product Share Modal */}
+            <ProductShareModal
+                isOpen={isShareOpen}
+                onClose={() => setIsShareOpen(false)}
+                product={product}
             />
         </div>
     );

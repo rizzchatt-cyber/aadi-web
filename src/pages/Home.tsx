@@ -6,7 +6,7 @@ import WhyChooseUs from '../components/WhyChooseUs';
 import { motion, AnimatePresence } from 'motion/react';
 import SplitText from '../components/SplitText';
 import Reveal from '../components/Reveal';
-import { ChevronRight, MoreVertical } from 'lucide-react';
+import { ChevronRight, MoreVertical, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DriveImage from '../components/DriveImage';
 import CarouselBanner from '../components/CarouselBanner';
@@ -14,6 +14,7 @@ import { where } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
+import ProductShareModal, { ShareProductData } from '../components/ProductShareModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
@@ -35,6 +36,13 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
+  const [shareProduct, setShareProduct] = useState<ShareProductData | null>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  const handleOpenShare = (prod: any) => {
+    setShareProduct(prod);
+    setIsShareOpen(true);
+  };
 
   useEffect(() => {
     // Fetch Featured Products
@@ -288,16 +296,17 @@ export default function Home() {
                         </div>
                       </div>
 
-                      {/* Three Dots - "three dots" as requested */}
+                      {/* Share Button on product card */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Action for sharing or menu
+                          handleOpenShare(product);
                         }}
-                        className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-white"
-                        aria-label="More options"
+                        className="absolute top-4 right-4 z-20 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 backdrop-blur-md shadow-sm border border-gold/20 flex items-center justify-center text-charcoal/70 hover:text-gold hover:bg-white transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 cursor-pointer active:scale-90"
+                        aria-label="Share product"
+                        title="Share product"
                       >
-                        <MoreVertical size={16} />
+                        <Share2 size={15} />
                       </button>
                     </div>
                     <div className="p-6 flex-grow flex flex-col text-center">
@@ -410,6 +419,11 @@ export default function Home() {
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
         selectedVariant={selectedVariant}
         isFragrance={isFragranceProduct(selectedProduct)}
+      />
+      <ProductShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        product={shareProduct}
       />
     </motion.div>
   );
