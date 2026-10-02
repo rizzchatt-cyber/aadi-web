@@ -23,7 +23,7 @@ import { LazyImage } from '../components/LazyImage';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
-import ProductShareModal, { ShareProductData } from '../components/ProductShareModal';
+import { shareProductDirectly } from '../utils/shareUtils';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
@@ -44,12 +44,9 @@ export default function Collections() {
   const [isShippingOpen, setIsShippingOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [shareProduct, setShareProduct] = useState<ShareProductData | null>(null);
-  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const handleOpenShare = (prod: any) => {
-    setShareProduct(prod);
-    setIsShareOpen(true);
+    shareProductDirectly(prod);
   };
   const [orderSuccessId, setOrderSuccessId] = useState<string | null>(null);
 
@@ -676,11 +673,6 @@ export default function Collections() {
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
         selectedVariant={selectedVariant}
         isFragrance={isFragranceProduct(selectedProduct)}
-      />
-      <ProductShareModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        product={shareProduct}
       />
     </motion.div>
   );

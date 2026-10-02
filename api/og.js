@@ -2,8 +2,8 @@ const PROJECT_ID = 'aditya-abe51';
 const DEFAULT_ORIGIN = 'https://aadityasaura.com';
 const DEFAULT_LOGO = 'https://aadityasaura.com/logo.png';
 
-function cleanImageUrl(url) {
-  if (!url) return DEFAULT_LOGO;
+function extractFileId(url) {
+  if (!url) return null;
   try {
     let clean = url;
     if (clean.includes('wsrv.nl')) {
@@ -13,31 +13,22 @@ function cleanImageUrl(url) {
     }
 
     const uObj = new URL(clean);
-    let fileId = null;
-
     if (uObj.hostname === 'lh3.googleusercontent.com' && uObj.pathname.startsWith('/d/')) {
       const raw = uObj.pathname.replace('/d/', '');
-      fileId = raw.split('=')[0];
+      return raw.split('=')[0];
     } else if (uObj.hostname === 'drive.google.com' && uObj.pathname.includes('/thumbnail')) {
-      fileId = uObj.searchParams.get('id');
+      return uObj.searchParams.get('id');
     } else if (uObj.searchParams.has('id')) {
-      fileId = uObj.searchParams.get('id');
+      return uObj.searchParams.get('id');
     } else if (uObj.pathname.includes('/file/d/')) {
       const parts = uObj.pathname.split('/');
       const dIdx = parts.indexOf('d');
       if (dIdx !== -1 && parts.length > dIdx + 1) {
-        fileId = parts[dIdx + 1];
+        return parts[dIdx + 1];
       }
     }
-
-    if (fileId) {
-      // Scale to w800 for optimal fast delivery & social media preview compatibility (<800KB)
-      return `https://lh3.googleusercontent.com/d/${fileId}=w800`;
-    }
-    return clean.startsWith('http') ? clean : `${DEFAULT_ORIGIN}${clean.startsWith('/') ? '' : '/'}${clean}`;
-  } catch (e) {
-    return url && typeof url === 'string' && url.startsWith('http') ? url : DEFAULT_LOGO;
-  }
+  } catch (e) {}
+  return null;
 }
 
 function parseFirestoreValue(val) {
@@ -87,7 +78,6 @@ export default async function handler(req, res) {
   const origin = `${protocol}://${host}`;
 
   if (!id) {
-    // Return default site Open Graph preview
     const defaultHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -99,6 +89,10 @@ export default async function handler(req, res) {
   <meta property="og:title" content="Aaditya’s Aura | Pure Luxury Jewellery, Attar &amp; Perfume">
   <meta property="og:description" content="Pure Luxury Jewellery, Attar, and Perfume. Crafting pieces that transcend time.">
   <meta property="og:image" content="${DEFAULT_LOGO}">
+  <meta property="og:image:secure_url" content="${DEFAULT_LOGO}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="300">
+  <meta property="og:image:height" content="300">
   <meta property="og:url" content="${origin}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${DEFAULT_LOGO}">
@@ -117,13 +111,30 @@ export default async function handler(req, res) {
 
   try {
     const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/products/${encodeURIComponent(id)}`;
-    const response = await fetch(firestoreUrl);
+    let response = await fetch(firestoreUrl);
+    let docData = null;
 
-    if (!response.ok) {
-      throw new Error(`Product not found (${response.status})`);
+    if (response.ok) {
+      docData = await response.json();
+    } else {
+      // Case-insensitive fallback for IDs
+      const listRes = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/products?pageSize=300`);
+      if (listRes.ok) {
+        const listJson = await listRes.json();
+        const found = (listJson.documents || []).find((d) => {
+          const dId = d.name.split('/').pop();
+          return dId.toLowerCase() === id.toLowerCase();
+        });
+        if (found) {
+          docData = found;
+        }
+      }
     }
 
-    const docData = await response.json();
+    if (!docData) {
+      throw new Error(`Product not found (${id})`);
+    }
+
     const fields = docData.fields || {};
     const product = {};
     for (const [k, v] of Object.entries(fields)) {
@@ -140,7 +151,20 @@ export default async function handler(req, res) {
     }
 
     const primaryImageRaw = rawImages[0] || '';
-    const primaryImageUrl = cleanImageUrl(primaryImageRaw);
+    const fileId = extractFileId(primaryImageRaw);
+
+    // Primary image for WhatsApp: MUST be strictly under 300KB!
+    // We provide our same-origin edge endpoint and direct Google thumbnail with extension
+    let primaryImageUrl = DEFAULT_LOGO;
+    let directCdnImageUrl = DEFAULT_LOGO;
+
+    if (fileId) {
+      primaryImageUrl = `${origin}/api/img?id=${fileId}&ext=.png`;
+      directCdnImageUrl = `https://lh3.googleusercontent.com/d/${fileId}=s250?.png`;
+    } else if (primaryImageRaw && primaryImageRaw.startsWith('http')) {
+      primaryImageUrl = primaryImageRaw;
+      directCdnImageUrl = primaryImageRaw;
+    }
 
     // Pricing
     let priceText = '';
@@ -153,12 +177,12 @@ export default async function handler(req, res) {
     // Meta title & description
     const rawTitle = product.title || "Aaditya's Aura Masterpiece";
     const pageTitle = `${rawTitle} | Aaditya's Aura`;
-    
+
     let pageDescription = product.description
       ? String(product.description).replace(/\s+/g, ' ').trim().slice(0, 180)
       : '';
     if (priceText) {
-      pageDescription = pageDescription 
+      pageDescription = pageDescription
         ? `${priceText} • ${pageDescription}`
         : `${priceText} - Handcrafted luxury jewellery, pure attar & exquisite perfumes by Aaditya's Aura.`;
     } else if (!pageDescription) {
@@ -166,18 +190,6 @@ export default async function handler(req, res) {
     }
 
     const productUrl = `${origin}/product/${encodeURIComponent(id)}`;
-
-    // Build extra og:image tags for secondary images
-    let extraOgImages = '';
-    if (rawImages.length > 1) {
-      extraOgImages = rawImages
-        .slice(1, 4)
-        .map((img) => {
-          const cleanUrl = cleanImageUrl(img);
-          return `  <meta property="og:image" content="${escapeHtml(cleanUrl)}">`;
-        })
-        .join('\n');
-    }
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -193,13 +205,21 @@ export default async function handler(req, res) {
   <meta property="og:title" content="${escapeHtml(pageTitle)}">
   <meta property="og:description" content="${escapeHtml(pageDescription)}">
   <meta property="og:url" content="${escapeHtml(productUrl)}">
+  
+  <!-- Primary Image (< 300KB for WhatsApp link preview thumbnail) -->
   <meta property="og:image" content="${escapeHtml(primaryImageUrl)}">
   <meta property="og:image:secure_url" content="${escapeHtml(primaryImageUrl)}">
-  <meta property="og:image:type" content="image/jpeg">
-  <meta property="og:image:width" content="800">
-  <meta property="og:image:height" content="800">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="300">
+  <meta property="og:image:height" content="300">
   <meta property="og:image:alt" content="${escapeHtml(rawTitle)}">
-${extraOgImages}
+
+  <!-- Fallback Direct CDN Image (< 300KB) -->
+  <meta property="og:image" content="${escapeHtml(directCdnImageUrl)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(directCdnImageUrl)}">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="300">
+  <meta property="og:image:height" content="300">
 
   <!-- Twitter / X Cards -->
   <meta name="twitter:card" content="summary_large_image">
@@ -281,7 +301,6 @@ ${extraOgImages}
 
   } catch (err) {
     console.error(`[OG Generator] Error fetching product ${id}:`, err);
-    // Return standard fallback page with logo
     const fallbackHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -290,6 +309,7 @@ ${extraOgImages}
   <meta property="og:title" content="Aaditya’s Aura | Pure Luxury">
   <meta property="og:description" content="Discover pure luxury jewellery, attar &amp; perfume at Aaditya’s Aura.">
   <meta property="og:image" content="${DEFAULT_LOGO}">
+  <meta property="og:image:type" content="image/png">
   <meta property="og:url" content="${origin}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${DEFAULT_LOGO}">

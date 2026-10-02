@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import handler from './create-order.js';
 import ogHandler from './og.js';
+import imgHandler from './img.js';
 
 const app = express();
 app.use(cors());
@@ -13,6 +14,10 @@ app.post('/api/create-order', (req, res) => {
 
 app.get('/api/og', (req, res) => {
   ogHandler(req, res);
+});
+
+app.get('/api/img', (req, res) => {
+  imgHandler(req, res);
 });
 
 // Crawler detection for /product/:id in Express environment

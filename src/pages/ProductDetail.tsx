@@ -22,7 +22,7 @@ import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import FragranceSelectionModal, { SelectedFragranceVariant } from '../components/FragranceSelectionModal';
-import ProductShareModal from '../components/ProductShareModal';
+import { shareProductDirectly } from '../utils/shareUtils';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
 
@@ -34,7 +34,6 @@ export default function ProductDetail() {
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [activeImage, setActiveImage] = useState(0);
-    const [isShareOpen, setIsShareOpen] = useState(false);
     const [isZoomed, setIsZoomed] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isFragranceModalOpen, setIsFragranceModalOpen] = useState(false);
@@ -356,7 +355,7 @@ export default function ProductDetail() {
 
                             {/* Share button overlay */}
                             <button
-                                onClick={() => setIsShareOpen(true)}
+                                onClick={() => shareProductDirectly(product)}
                                 className="absolute top-8 right-8 z-10 w-11 h-11 bg-white/90 backdrop-blur-md rounded-full text-charcoal/70 shadow-md border border-gold/25 flex items-center justify-center transition-all hover:bg-gold hover:text-white hover:scale-105 active:scale-95 cursor-pointer"
                                 aria-label="Share product"
                                 title="Share product"
@@ -400,7 +399,7 @@ export default function ProductDetail() {
                                     {product.material || 'Aura Selection'}
                                 </span>
                                 <button
-                                    onClick={() => setIsShareOpen(true)}
+                                    onClick={() => shareProductDirectly(product)}
                                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-gold/25 text-charcoal/70 hover:text-gold shadow-xs hover:shadow text-xs font-semibold transition-all active:scale-95 cursor-pointer"
                                 >
                                     <Share2 size={13} className="text-gold" />
@@ -577,7 +576,7 @@ export default function ProductDetail() {
                                 <motion.button
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => setIsShareOpen(true)}
+                                    onClick={() => shareProductDirectly(product)}
                                     className="py-5 px-6 bg-luxury-cream border-2 border-gold/30 hover:border-gold text-charcoal font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 hover:bg-gold/10 transition-all cursor-pointer"
                                     title="Share Masterpiece"
                                     aria-label="Share Masterpiece"
@@ -647,13 +646,6 @@ export default function ProductDetail() {
                 price={selectedVariant ? selectedVariant.price : (product?.price || 0)}
                 selectedVariant={selectedVariant}
                 isFragrance={isFragranceProduct(product)}
-            />
-
-            {/* Product Share Modal */}
-            <ProductShareModal
-                isOpen={isShareOpen}
-                onClose={() => setIsShareOpen(false)}
-                product={product}
             />
         </div>
     );
