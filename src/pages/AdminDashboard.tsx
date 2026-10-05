@@ -254,8 +254,10 @@ export default function AdminDashboard() {
         },
         perfume: {
             enabled: true,
+            '10-15ml': { enabled: true, price: 299, mrp: 499 },
+            '20-25ml': { enabled: true, price: 399, mrp: 699 },
             '30ml': { enabled: true, price: 549, mrp: 849 },
-            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '50-60ml': { enabled: true, price: 799, mrp: 1199 },
             '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     };
@@ -273,8 +275,10 @@ export default function AdminDashboard() {
         },
         perfume: {
             enabled: true,
+            '10-15ml': { enabled: true, price: 299, mrp: 499 },
+            '20-25ml': { enabled: true, price: 399, mrp: 699 },
             '30ml': { enabled: true, price: 549, mrp: 849 },
-            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '50-60ml': { enabled: true, price: 799, mrp: 1199 },
             '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     });
@@ -291,8 +295,10 @@ export default function AdminDashboard() {
         },
         perfume: {
             enabled: true,
+            '10-15ml': { enabled: true, price: 299, mrp: 499 },
+            '20-25ml': { enabled: true, price: 399, mrp: 699 },
             '30ml': { enabled: true, price: 549, mrp: 849 },
-            '60ml': { enabled: true, price: 799, mrp: 1199 },
+            '50-60ml': { enabled: true, price: 799, mrp: 1199 },
             '100ml': { enabled: true, price: 1499, mrp: 2199 }
         }
     });
@@ -321,9 +327,13 @@ export default function AdminDashboard() {
             opts.attar?.['9ml']?.price,
         ].filter((p: any) => p && typeof p === 'number' && p > 0);
         const perfumePrices = [
+            opts.perfume?.['10-15ml']?.price,
+            opts.perfume?.['20-25ml']?.price,
+            opts.perfume?.['50-60ml']?.price,
             opts.perfume?.['30ml']?.price,
             opts.perfume?.['60ml']?.price,
             opts.perfume?.['100ml']?.price,
+            opts.perfume?.['50ml']?.price,
         ].filter((p: any) => p && typeof p === 'number' && p > 0);
         const allPrices = [...attarPrices, ...perfumePrices];
         if (allPrices.length > 0) return Math.min(...allPrices);
@@ -2505,7 +2515,7 @@ export default function AdminDashboard() {
                                     <div className="flex items-center justify-between">
                                         <div>
                                             <h4 className="font-bold text-sm text-charcoal">Fragrance Variant Settings</h4>
-                                            <p className="text-[10px] text-charcoal/50">Configure Attar (3ml, 6ml, 12ml) & Perfume (30ml, 60ml, 100ml) pricing</p>
+                                            <p className="text-[10px] text-charcoal/50">Configure Attar (3ml, 6ml, 12ml) & Perfume (10-15ml, 20-25ml, 30ml, 50-60ml, 100ml) pricing</p>
                                         </div>
                                         <label className="flex items-center gap-2 cursor-pointer">
                                             <input
@@ -2604,8 +2614,8 @@ export default function AdminDashboard() {
                                                     </label>
                                                 </div>
                                                 {fragranceOptions.perfume?.enabled !== false && (
-                                                    <div className="grid grid-cols-3 gap-3 pt-2">
-                                                        {['30ml', '60ml', '100ml'].map((size) => (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+                                                        {['10-15ml', '20-25ml', '30ml', '50-60ml', '100ml'].map((size) => (
                                                             <div key={size} className="space-y-1">
                                                                 <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                     <span>{size} Price (₹)</span>
@@ -3267,8 +3277,8 @@ export default function AdminDashboard() {
                                                 </label>
                                             </div>
                                             {categoryFragranceOptions.perfume?.enabled !== false && (
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    {['30ml', '60ml', '100ml'].map((size) => (
+                                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                                    {['10-15ml', '20-25ml', '30ml', '50-60ml', '100ml'].map((size) => (
                                                         <div key={size} className="space-y-1">
                                                             <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                 <span>{size} (₹)</span>
@@ -3476,8 +3486,8 @@ export default function AdminDashboard() {
                                                 </label>
                                             </div>
                                             {globalFragranceOptions.perfume?.enabled !== false && (
-                                                <div className="grid grid-cols-3 gap-3">
-                                                    {['30ml', '60ml', '100ml'].map((size) => (
+                                                <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                                    {['10-15ml', '20-25ml', '30ml', '50-60ml', '100ml'].map((size) => (
                                                         <div key={size} className="space-y-1">
                                                             <div className="flex justify-between items-center text-[10px] font-bold text-charcoal/60">
                                                                 <span>{size} (₹)</span>

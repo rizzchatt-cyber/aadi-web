@@ -103,7 +103,7 @@ export default function FragranceSelectionModal({
         if (isOpen) {
             if (!attarEnabled && perfumeEnabled) {
                 setSelectedType('Perfume');
-                setSelectedSize('60ml');
+                setSelectedSize('20-25ml');
             } else {
                 setSelectedType('Attar');
                 setSelectedSize('6ml');
@@ -320,16 +320,19 @@ export default function FragranceSelectionModal({
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-3 gap-2.5">
-                                    {Object.entries(currentMap).map(([sizeKey, item]) => {
+                                <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
+                                    {Object.entries(currentMap).map(([sizeKey, item], index, arr) => {
                                         const isSelected = selectedSize === sizeKey;
+                                        const colSpanClass = arr.length === 5
+                                            ? index < 3 ? 'col-span-2' : 'col-span-3'
+                                            : 'col-span-2';
                                         return (
                                             <button
                                                 key={sizeKey}
                                                 type="button"
                                                 disabled={!item.enabled}
                                                 onClick={() => setSelectedSize(sizeKey)}
-                                                className={`py-3 px-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer relative backdrop-blur-[2px] ${
+                                                className={`${colSpanClass} py-3 px-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-center cursor-pointer relative backdrop-blur-[2px] ${
                                                     isSelected
                                                         ? 'border-gold bg-amber-500/10 shadow-sm ring-1 ring-gold text-charcoal font-bold'
                                                         : item.enabled

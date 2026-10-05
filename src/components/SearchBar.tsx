@@ -137,11 +137,6 @@ export default function SearchBar({ onSearch, onFilterChange, onSortChange, sugg
                                                 {categories.find(c => c.id === item.category_id)?.name || 'Collection'}
                                             </p>
                                         </div>
-                                        <div className="text-right flex-shrink-0">
-                                            {item.priceOnRequest ? null : (
-                                                <p className="text-sm font-black text-charcoal">₹{(item.price || 0).toLocaleString()}</p>
-                                            )}
-                                        </div>
                                     </button>
                                 ))}
                             </div>

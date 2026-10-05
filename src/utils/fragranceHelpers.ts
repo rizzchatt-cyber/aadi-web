@@ -3,7 +3,7 @@ export interface FragranceVariantInfo {
     price: number;
     mrp: number;
     discount: number;
-    sizeName: 'Small' | 'Medium' | 'Large';
+    sizeName: string;
     ml: string;
     label: string;
 }
@@ -127,22 +127,53 @@ export function getFragrancePricing(prod: any): FragrancePricingResult {
         }
     };
 
-    // Perfume Options (30ml: 549, 60ml: 799, 100ml: 1499)
+    // Perfume Options - 5 Sizes: 10-15ml (299), 20-25ml (399), 30ml (549), 50-60ml (799), 100ml (1499)
     const perfumeEnabled = opts.perfume?.enabled !== false;
 
+    // 10-15ml Perfume (Pocket)
+    const raw10_15ml = opts.perfume?.['10-15ml']?.price;
+    const perfume10_15mlPrice = (raw10_15ml && raw10_15ml > 0) ? raw10_15ml : 299;
+    const perfume10_15mlMrpInfo = calculateMrpAndDiscount(perfume10_15mlPrice, opts.perfume?.['10-15ml']?.mrp);
+
+    // 20-25ml Perfume (Travel)
+    const raw20_25ml = opts.perfume?.['20-25ml']?.price;
+    const perfume20_25mlPrice = (raw20_25ml && raw20_25ml > 0) ? raw20_25ml : 399;
+    const perfume20_25mlMrpInfo = calculateMrpAndDiscount(perfume20_25mlPrice, opts.perfume?.['20-25ml']?.mrp);
+
     // 30ml Perfume (Small)
-    const perfume30mlPrice = (opts.perfume?.['30ml']?.price && opts.perfume['30ml'].price > 0) ? opts.perfume['30ml'].price : 549;
+    const raw30ml = opts.perfume?.['30ml']?.price;
+    const perfume30mlPrice = (raw30ml && raw30ml > 0) ? raw30ml : 549;
     const perfume30mlMrpInfo = calculateMrpAndDiscount(perfume30mlPrice, opts.perfume?.['30ml']?.mrp);
 
-    // 60ml Perfume (Medium)
-    const perfume60mlPrice = (opts.perfume?.['60ml']?.price && opts.perfume['60ml'].price > 0) ? opts.perfume['60ml'].price : 799;
-    const perfume60mlMrpInfo = calculateMrpAndDiscount(perfume60mlPrice, opts.perfume?.['60ml']?.mrp);
+    // 50-60ml Perfume (Medium - formerly 60ml / 50ml)
+    const raw50_60ml = opts.perfume?.['50-60ml']?.price || opts.perfume?.['60ml']?.price || opts.perfume?.['50ml']?.price;
+    const perfume50_60mlPrice = (raw50_60ml && raw50_60ml > 0) ? raw50_60ml : 799;
+    const perfume50_60mlMrpInfo = calculateMrpAndDiscount(perfume50_60mlPrice, opts.perfume?.['50-60ml']?.mrp || opts.perfume?.['60ml']?.mrp || opts.perfume?.['50ml']?.mrp);
 
     // 100ml Perfume (Large)
-    const perfume100mlPrice = (opts.perfume?.['100ml']?.price && opts.perfume['100ml'].price > 0) ? opts.perfume['100ml'].price : 1499;
+    const raw100ml = opts.perfume?.['100ml']?.price;
+    const perfume100mlPrice = (raw100ml && raw100ml > 0) ? raw100ml : 1499;
     const perfume100mlMrpInfo = calculateMrpAndDiscount(perfume100mlPrice, opts.perfume?.['100ml']?.mrp);
 
     const perfumeOptions: Record<string, FragranceVariantInfo> = {
+        '10-15ml': {
+            enabled: opts.perfume?.['10-15ml']?.enabled !== false,
+            price: perfume10_15mlPrice,
+            mrp: perfume10_15mlMrpInfo.mrp,
+            discount: perfume10_15mlMrpInfo.discount,
+            sizeName: 'Pocket',
+            ml: '10-15ml',
+            label: 'Pocket (10-15ml)'
+        },
+        '20-25ml': {
+            enabled: opts.perfume?.['20-25ml']?.enabled !== false,
+            price: perfume20_25mlPrice,
+            mrp: perfume20_25mlMrpInfo.mrp,
+            discount: perfume20_25mlMrpInfo.discount,
+            sizeName: 'Travel',
+            ml: '20-25ml',
+            label: 'Travel (20-25ml)'
+        },
         '30ml': {
             enabled: opts.perfume?.['30ml']?.enabled !== false,
             price: perfume30mlPrice,
@@ -152,14 +183,14 @@ export function getFragrancePricing(prod: any): FragrancePricingResult {
             ml: '30ml',
             label: 'Small (30ml)'
         },
-        '60ml': {
-            enabled: opts.perfume?.['60ml']?.enabled !== false,
-            price: perfume60mlPrice,
-            mrp: perfume60mlMrpInfo.mrp,
-            discount: perfume60mlMrpInfo.discount,
+        '50-60ml': {
+            enabled: (opts.perfume?.['50-60ml']?.enabled ?? opts.perfume?.['60ml']?.enabled ?? opts.perfume?.['50ml']?.enabled) !== false,
+            price: perfume50_60mlPrice,
+            mrp: perfume50_60mlMrpInfo.mrp,
+            discount: perfume50_60mlMrpInfo.discount,
             sizeName: 'Medium',
-            ml: '60ml',
-            label: 'Medium (60ml)'
+            ml: '50-60ml',
+            label: 'Medium (50-60ml)'
         },
         '100ml': {
             enabled: opts.perfume?.['100ml']?.enabled !== false,
@@ -180,8 +211,8 @@ export function getFragrancePricing(prod: any): FragrancePricingResult {
     const attarMinMrp = attarMinVariant.mrp;
     const attarMaxDiscount = attarMinVariant.discount;
 
-    const perfumeMinPrice = activePerfumeVariants.length > 0 ? Math.min(...activePerfumeVariants.map(v => v.price)) : 549;
-    const perfumeMinVariant = activePerfumeVariants.find(v => v.price === perfumeMinPrice) || perfumeOptions['30ml'];
+    const perfumeMinPrice = activePerfumeVariants.length > 0 ? Math.min(...activePerfumeVariants.map(v => v.price)) : 299;
+    const perfumeMinVariant = activePerfumeVariants.find(v => v.price === perfumeMinPrice) || perfumeOptions['10-15ml'];
     const perfumeMinMrp = perfumeMinVariant.mrp;
     const perfumeMaxDiscount = perfumeMinVariant.discount;
 

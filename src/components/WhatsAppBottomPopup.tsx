@@ -11,6 +11,10 @@ interface WhatsAppBottomPopupProps {
 export default function WhatsAppBottomPopup({ onVisibilityChange }: WhatsAppBottomPopupProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Ultra-light inline placeholder (0.8KB) - renders in 0ms for instant preview
+  const placeholderSrc = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDABALDA4MChAODQ4SERATGCgaGBYWGDEjJR0oOjM9PDkzODdASFxOQERXRTc4UG1RV19iZ2hnPk1xeXBkeFxlZ2P/2wBDARESEhgVGC8aGi9jQjhCY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2NjY2P/wAARCAAgABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwC+pRlLbYclOCfcdqpWerWUZtrDapnaNMlUzgkcZ96t3D/6JILNSX2jaVyxH51ZTRIbeQLBMdxYebLgFhgYGPbjpWEU+pZVmlI1OIArgFc4U4z70VVhluzqKIyExrIqvKSDt5wOOvpRRyBcZp2oXYaZC7M0sexERen0A4H1rpdMiBsEkmlBVUHmH3xzzUOk6SunxGRxvmYcsBn8BUNneSRRm2ZiJDbrI3y9M5yAPUVrYVypqsFxHDJcw28LQzOF3AAsueAc+nfJ6UVcspl8ySzSWSUGMuC5BJGcEfqKKTQLU//Z";
 
   // WhatsApp Configuration
   const displayName = "Aaditya soni";
@@ -79,16 +83,35 @@ export default function WhatsAppBottomPopup({ onVisibilityChange }: WhatsAppBott
                 className="flex items-center gap-3 min-w-0 cursor-pointer group flex-1"
                 title="Chat with Aaditya soni on WhatsApp"
               >
-                {/* Circular Avatar with aa photo (no text inside) */}
+                {/* Circular Avatar with progressive blur-up image loader */}
                 <div className="relative shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-luxury-cream border-2 border-gold/40 overflow-hidden flex items-center justify-center shadow-xs group-hover:border-gold transition-colors">
+                  <div className="w-12 h-12 rounded-full bg-luxury-cream border-2 border-gold/40 overflow-hidden relative flex items-center justify-center shadow-xs group-hover:border-gold transition-colors">
+                    {/* Low Quality Placeholder (loads instantly in 0ms with soft blur) */}
+                    <img
+                      src={placeholderSrc}
+                      alt=""
+                      aria-hidden="true"
+                      className={`absolute inset-0 w-full h-full object-cover object-[50%_18%] filter blur-[3px] scale-110 transition-opacity duration-700 ease-out ${
+                        imageLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                      }`}
+                    />
+
+                    {/* High Quality Compressed Image (smoothly fades and sharpens into view) */}
                     <img
                       src={aaPhoto}
                       alt={displayName}
-                      className="w-full h-full object-cover object-[50%_18%]"
+                      loading="eager"
+                      decoding="async"
+                      onLoad={() => setImageLoaded(true)}
+                      className={`relative w-full h-full object-cover object-[50%_18%] transition-all duration-700 ease-out transform ${
+                        imageLoaded
+                          ? 'opacity-100 scale-100 filter-none'
+                          : 'opacity-0 scale-105 filter blur-xs'
+                      }`}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = logo;
                         (e.target as HTMLImageElement).className = "w-full h-full object-contain p-1";
+                        setImageLoaded(true);
                       }}
                     />
                   </div>

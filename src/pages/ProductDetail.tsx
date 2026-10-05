@@ -433,9 +433,8 @@ export default function ProductDetail() {
                                         </div>
                                         <div className="pt-2 border-t border-gold/15 flex flex-wrap items-center gap-2 text-xs font-medium text-charcoal/70">
                                             <span className="font-bold text-charcoal uppercase tracking-wider text-[10px] bg-gold/10 px-2 py-0.5 rounded">Sizes:</span>
-                                            <span className="font-bold text-charcoal">Small</span> <span className="text-[10px] text-charcoal/50">(3ml / 30ml)</span> • 
-                                            <span className="font-bold text-charcoal">Medium</span> <span className="text-[10px] text-charcoal/50">(6ml / 60ml)</span> • 
-                                            <span className="font-bold text-charcoal">Large</span> <span className="text-[10px] text-charcoal/50">(12ml / 100ml)</span>
+                                            <span className="font-bold text-charcoal">Attar</span> <span className="text-[10px] text-charcoal/50">(3ml, 6ml, 12ml)</span> • 
+                                            <span className="font-bold text-charcoal">Perfume</span> <span className="text-[10px] text-charcoal/50">(10-15ml, 20-25ml, 30ml, 50-60ml, 100ml)</span>
                                         </div>
                                     </div>
                                 ) : product.priceOnRequest ? (
@@ -481,7 +480,7 @@ export default function ProductDetail() {
                                     <Maximize2 className="text-gold" size={24} />
                                     <div>
                                         <p className="text-[10px] font-bold uppercase tracking-wider text-charcoal/40">Weight & Size</p>
-                                        <p className="text-xs font-bold text-charcoal">{product.weight}</p>
+                                        <p className="text-xs font-bold text-charcoal">{product.weight.replace(/\b50\s*ml\b/gi, '50-60ml')}</p>
                                     </div>
                                 </div>
                             )}
@@ -500,6 +499,7 @@ export default function ProductDetail() {
                                     className={`text-charcoal/70 text-base leading-relaxed font-serif italic transition-all duration-500 overflow-hidden ${!isExpanded && (product.description?.length > 300) ? 'max-h-[160px]' : 'max-h-[2000px]'}`}
                                 >
                                     {(product.description || 'No description available for this exquisite masterpiece.')
+                                        .replace(/\b50\s*ml\b/gi, '50-60ml')
                                         .replace(/(\u2014{2,}|-{2,})(?=\s*[\u2700-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF0-9])/g, '\n') // Split by long dashes if followed by point markers
                                         .split('\n')
                                         .map((line: string, i: number) => {
