@@ -27,6 +27,7 @@ interface ShippingModalProps {
     defaultEmail?: string;
     codAvailable?: boolean;
     price?: number;
+    codPrice?: number;
     selectedVariant?: {
         type: string;
         size: string;
@@ -59,6 +60,7 @@ export default function ShippingModal({
     defaultEmail = '',
     codAvailable = false,
     price = 0,
+    codPrice,
     selectedVariant = null,
     isFragrance = false
 }: ShippingModalProps) {
@@ -76,8 +78,10 @@ export default function ShippingModal({
     });
 
     const isFragranceOrder = isFragrance || !!selectedVariant;
-    const codFee = (formData.paymentMethod === 'cod' && isFragranceOrder) ? 50 : 0;
-    const finalDisplayPrice = price + codFee;
+    const codFee = (formData.paymentMethod === 'cod')
+        ? (codPrice ? Math.max(0, codPrice - price) : (isFragranceOrder ? 50 : 0))
+        : 0;
+    const finalDisplayPrice = (formData.paymentMethod === 'cod' && codPrice) ? codPrice : (price + codFee);
 
     const [error, setError] = useState('');
     const [particles, setParticles] = useState<Particle[]>([]);
@@ -595,14 +599,14 @@ export default function ShippingModal({
                                                     <div>
                                                         <div className="flex items-center gap-1.5">
                                                             <p className="font-bold text-charcoal text-xs">Cash on Delivery</p>
-                                                            {isFragranceOrder && (
+                                                            {codFee > 0 && (
                                                                 <span className="text-[8px] font-black bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-full">
-                                                                    +₹50 COD Fee
+                                                                    +₹{codFee} COD Fee
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <p className="text-[9px] text-charcoal/40 font-normal">
-                                                            {isFragranceOrder ? 'Pay cash at doorstep (+₹50 COD fee)' : 'Pay cash at your doorstep'}
+                                                            {codFee > 0 ? `Pay cash at doorstep (+₹${codFee} COD fee • Total ₹${finalDisplayPrice.toLocaleString()})` : 'Pay cash at your doorstep'}
                                                         </p>
                                                     </div>
                                                 </button>

@@ -551,10 +551,13 @@ export default function AdminDashboard() {
             const showRating = formData.get('showRating') === 'on';
             const priceOnRequest = isFragrance ? false : (formData.get('priceOnRequest') === 'on');
             const codAvailable = formData.get('codAvailable') === 'on';
+            const codPriceVal = Number(formData.get('codPrice'));
+            const codPrice = (!isNaN(codPriceVal) && codPriceVal > 0) ? codPriceVal : undefined;
 
             const rawProductData = {
                 title: title || '',
                 price: isNaN(price) ? 0 : price,
+                codPrice: codPrice !== undefined ? codPrice : null,
                 discount: isNaN(discount) ? 0 : discount,
                 category_id: category_id || '',
                 category_ids: category_ids || [],
@@ -1683,7 +1686,12 @@ export default function AdminDashboard() {
                                                         ) : p.priceOnRequest ? (
                                                             <span className="text-[10px] font-bold tracking-wider text-green-600 uppercase">On Request</span>
                                                         ) : (
-                                                            `₹${(p.price || 0).toLocaleString()}`
+                                                            <div className="flex flex-col">
+                                                                <span>₹{(p.price || 0).toLocaleString()}</span>
+                                                                {p.codPrice && (
+                                                                    <span className="text-[9px] font-bold text-amber-600">COD: ₹{p.codPrice.toLocaleString()}</span>
+                                                                )}
+                                                            </div>
                                                         )}
                                                     </td>
                                                     <td className="px-8 py-5 text-right whitespace-nowrap">
@@ -2379,6 +2387,16 @@ export default function AdminDashboard() {
                                         defaultValue={editingProduct.discount || 0}
                                         className="w-full bg-white border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none"
                                         placeholder="0"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase text-charcoal/40">COD Price (₹)</label>
+                                    <input
+                                        type="number"
+                                        name="codPrice"
+                                        defaultValue={editingProduct.codPrice || ''}
+                                        className="w-full bg-white border border-gold/10 rounded-2xl p-4 focus:border-gold outline-none"
+                                        placeholder="999 (Optional if differs)"
                                     />
                                 </div>
                                 <div className="col-span-2 space-y-2">

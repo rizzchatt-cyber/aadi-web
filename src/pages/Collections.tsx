@@ -125,8 +125,10 @@ export default function Collections() {
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
     const basePrice = selectedVariant ? selectedVariant.price : (selectedProduct.price || 0);
     const isFragrance = isFragranceProduct(selectedProduct);
-    const codFee = (addressData.paymentMethod === 'cod' && isFragrance) ? 50 : 0;
-    const finalPrice = basePrice + codFee;
+    const codFee = (addressData.paymentMethod === 'cod')
+      ? (selectedProduct?.codPrice ? Math.max(0, selectedProduct.codPrice - basePrice) : (isFragrance ? 50 : 0))
+      : 0;
+    const finalPrice = (addressData.paymentMethod === 'cod' && selectedProduct?.codPrice) ? selectedProduct.codPrice : (basePrice + codFee);
     const itemTitle = selectedVariant 
       ? `${selectedProduct.title} (${selectedVariant.type} • ${selectedVariant.size})`
       : selectedProduct.title;
@@ -544,10 +546,15 @@ export default function Collections() {
                                   <span className="text-sm md:text-base font-serif font-bold text-gold">Price on Request</span>
                                 </div>
                               ) : (
-                                <div className="flex items-baseline gap-2">
+                                <div className="flex flex-wrap items-baseline gap-2">
                                   <span className="text-base md:text-xl font-serif font-bold text-charcoal">₹{(product.price || 0).toLocaleString()}</span>
                                   {product.discount > 0 && (
                                     <span className="text-xs md:text-sm text-charcoal/40 line-through">₹{Math.round(product.price * (1 + product.discount / 100)).toLocaleString()}</span>
+                                  )}
+                                  {product.codPrice && (
+                                    <span className="text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded-md">
+                                      COD: ₹{product.codPrice.toLocaleString()}
+                                    </span>
                                   )}
                                 </div>
                               )}
@@ -583,6 +590,32 @@ export default function Collections() {
                                 </svg>
                               </a>
                             </>
+                          ) : !product.priceOnRequest && product.price > 0 ? (
+                            <div className="flex gap-2 w-full">
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleShopNow(product);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex-1 py-2.5 md:py-3 gold-gradient text-white text-[8px] md:text-[10px] font-bold rounded-xl md:rounded-2xl shadow-lg shadow-gold/10 transition-all flex items-center justify-center gap-1 md:gap-1.5 uppercase tracking-[0.1em] shimmer relative overflow-hidden cursor-pointer"
+                              >
+                                Shop Now
+                              </motion.button>
+                              <motion.button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/product/${product.id}`);
+                                }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="py-2.5 px-3 md:py-3 md:px-3.5 bg-luxury-cream border border-gold/30 hover:border-gold text-charcoal text-[9px] md:text-[11px] font-bold rounded-xl md:rounded-2xl shadow-md transition-all flex items-center justify-center cursor-pointer"
+                                title="View Details"
+                              >
+                                Details
+                              </motion.button>
+                            </div>
                           ) : (
                             <motion.button
                               onClick={() => navigate(`/product/${product.id}`)}
@@ -671,6 +704,7 @@ export default function Collections() {
         defaultEmail={user?.email || ''}
         codAvailable={isFragranceProduct(selectedProduct) ? true : (selectedProduct?.codAvailable || false)}
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
+        codPrice={selectedProduct?.codPrice}
         selectedVariant={selectedVariant}
         isFragrance={isFragranceProduct(selectedProduct)}
       />

@@ -89,8 +89,10 @@ export default function Home() {
     const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
     const basePrice = selectedVariant ? selectedVariant.price : (selectedProduct.price || 0);
     const isFragrance = isFragranceProduct(selectedProduct);
-    const codFee = (addressData.paymentMethod === 'cod' && isFragrance) ? 50 : 0;
-    const finalPrice = basePrice + codFee;
+    const codFee = (addressData.paymentMethod === 'cod')
+      ? (selectedProduct?.codPrice ? Math.max(0, selectedProduct.codPrice - basePrice) : (isFragrance ? 50 : 0))
+      : 0;
+    const finalPrice = (addressData.paymentMethod === 'cod' && selectedProduct?.codPrice) ? selectedProduct.codPrice : (basePrice + codFee);
     const itemTitle = selectedVariant 
       ? `${selectedProduct.title} (${selectedVariant.type} • ${selectedVariant.size})`
       : selectedProduct.title;
@@ -414,6 +416,7 @@ export default function Home() {
         defaultEmail={user?.email || ''}
         codAvailable={isFragranceProduct(selectedProduct) ? true : (selectedProduct?.codAvailable || false)}
         price={selectedVariant ? selectedVariant.price : (selectedProduct?.price || 0)}
+        codPrice={selectedProduct?.codPrice}
         selectedVariant={selectedVariant}
         isFragrance={isFragranceProduct(selectedProduct)}
       />

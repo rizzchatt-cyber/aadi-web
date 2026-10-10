@@ -174,8 +174,10 @@ export default function ProductDetail() {
         const emailToSave = addressData.email || user?.email || "guest@aadityaaura.com";
         const basePrice = selectedVariant ? selectedVariant.price : (product.price || 0);
         const isFragrance = isFragranceProduct(product);
-        const codFee = (addressData.paymentMethod === 'cod' && isFragrance) ? 50 : 0;
-        const finalPrice = basePrice + codFee;
+        const codFee = (addressData.paymentMethod === 'cod')
+            ? (product?.codPrice ? Math.max(0, product.codPrice - basePrice) : (isFragrance ? 50 : 0))
+            : 0;
+        const finalPrice = (addressData.paymentMethod === 'cod' && product?.codPrice) ? product.codPrice : (basePrice + codFee);
         const itemTitle = selectedVariant 
             ? `${product.title} (${selectedVariant.type} • ${selectedVariant.size})`
             : product.title;
@@ -291,7 +293,9 @@ export default function ProductDetail() {
     };
 
     const getWhatsAppLink = () => {
-        const priceText = product.priceOnRequest ? "Exclusive Pricing via WhatsApp" : `₹${(product.price || 0).toLocaleString()}`;
+        const priceText = product.priceOnRequest 
+            ? "Exclusive Pricing via WhatsApp" 
+            : `₹${(product.price || 0).toLocaleString()}${product.codPrice ? ` (COD: ₹${product.codPrice.toLocaleString()})` : ''}`;
         const imageUrl = product.images?.[0] || '';
         const message = encodeURIComponent(`Hello! I'm interested in ordering: ${product.title} (${priceText}).\n\nImage: ${imageUrl}\n\nLink: ${window.location.href}`);
         return `https://wa.me/918653535303?text=${message}`;
@@ -452,14 +456,19 @@ export default function ProductDetail() {
                                         </motion.a>
                                     </div>
                                 ) : (
-                                    <>
+                                    <div className="flex flex-wrap items-baseline gap-3">
                                         <p className="text-3xl font-serif text-charcoal">₹{(product.price || 0).toLocaleString()}</p>
                                         {product.discount > 0 && (
                                             <p className="text-xl text-charcoal/30 line-through decoration-red-500/50">
                                                 ₹{Math.round(product.price * (1 + product.discount / 100)).toLocaleString()}
                                             </p>
                                         )}
-                                    </>
+                                        {product.codPrice && (
+                                            <span className="text-xs font-bold px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-300 rounded-full">
+                                                COD: ₹{product.codPrice.toLocaleString()}
+                                            </span>
+                                        )}
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -644,6 +653,7 @@ export default function ProductDetail() {
                 defaultEmail={user?.email || ''}
                 codAvailable={isFragranceProduct(product) ? true : (product?.codAvailable || false)}
                 price={selectedVariant ? selectedVariant.price : (product?.price || 0)}
+                codPrice={product?.codPrice}
                 selectedVariant={selectedVariant}
                 isFragrance={isFragranceProduct(product)}
             />
