@@ -9,6 +9,7 @@ import { collection, query, where, onSnapshot, orderBy, deleteDoc, doc, addDoc, 
 import ShippingModal, { AddressData } from '../components/ShippingModal';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct } from '../utils/fragranceHelpers';
+import { parseOrderItem, formatSafeDate, formatSafeOrderId, formatSafeCurrency } from '../utils/orderItemHelpers';
 
 export default function UserDashboard() {
     const { user, role } = useAuth();
@@ -181,9 +182,18 @@ export default function UserDashboard() {
             collection(db, "carts"),
             where("userId", "==", user.uid)
         );
+        const getTimeMs = (val: any) => {
+            if (!val) return 0;
+            if (typeof val?.toMillis === 'function') return val.toMillis();
+            if (typeof val?.toDate === 'function') return val.toDate().getTime();
+            if (typeof val?.seconds === 'number') return val.seconds * 1000;
+            const t = new Date(val).getTime();
+            return isNaN(t) ? 0 : t;
+        };
+
         const unsub = onSnapshot(q, (snap) => {
             const list = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
-            list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            list.sort((a, b) => getTimeMs(b.createdAt) - getTimeMs(a.createdAt));
             setCarts(list);
         });
         return () => unsub();
@@ -195,9 +205,18 @@ export default function UserDashboard() {
             collection(db, "orders"),
             where("userId", "==", user.uid)
         );
+        const getTimeMs = (val: any) => {
+            if (!val) return 0;
+            if (typeof val?.toMillis === 'function') return val.toMillis();
+            if (typeof val?.toDate === 'function') return val.toDate().getTime();
+            if (typeof val?.seconds === 'number') return val.seconds * 1000;
+            const t = new Date(val).getTime();
+            return isNaN(t) ? 0 : t;
+        };
+
         const unsub = onSnapshot(q, (snap) => {
             const list = snap.docs.map(doc => ({ id: doc.id, ...(doc.data() as any) }));
-            list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            list.sort((a, b) => getTimeMs(b.createdAt) - getTimeMs(a.createdAt));
             setOrders(list);
         });
         return () => unsub();
@@ -368,10 +387,20 @@ export default function UserDashboard() {
                             ) : (
                                 <div className="space-y-6">
                                     {orders.map((order) => {
-                                        // Calculate expected delivery date (4 days after order date)
-                                        const orderDate = new Date(order.createdAt);
-                                        const estDeliveryDate = new Date(orderDate);
-                                        estDeliveryDate.setDate(orderDate.getDate() + 4);
+                                        // Calculate expected delivery date (4 days after order date) safely
+                                        let rawDate: Date;
+                                        if (typeof order.createdAt?.toDate === 'function') {
+                                            rawDate = order.createdAt.toDate();
+                                        } else if (typeof order.createdAt?.seconds === 'number') {
+                                            rawDate = new Date(order.createdAt.seconds * 1000);
+                                        } else if (order.createdAt) {
+                                            rawDate = new Date(order.createdAt);
+                                        } else {
+                                            rawDate = new Date();
+                                        }
+                                        const validDate = isNaN(rawDate.getTime()) ? new Date() : rawDate;
+                                        const estDeliveryDate = new Date(validDate);
+                                        estDeliveryDate.setDate(validDate.getDate() + 4);
                                         const formattedEstDate = estDeliveryDate.toLocaleDateString(undefined, {
                                             weekday: 'short',
                                             month: 'short',
@@ -384,12 +413,12 @@ export default function UserDashboard() {
                                                 <div className="bg-gold/5 px-6 py-4 flex flex-wrap justify-between items-center gap-2 border-b border-gold/10">
                                                     <div>
                                                         <span className="text-[10px] font-bold text-charcoal/40 uppercase block">Order ID</span>
-                                                        <span className="text-xs font-mono font-bold text-charcoal">{order.id}</span>
+                                                        <span className="text-xs font-mono font-bold text-charcoal">#{formatSafeOrderId(order.id, 8)}</span>
                                                     </div>
                                                     <div>
                                                         <span className="text-[10px] font-bold text-charcoal/40 uppercase block">Order Date</span>
                                                         <span className="text-xs font-medium text-charcoal/70">
-                                                            {orderDate.toLocaleDateString(undefined, { dateStyle: 'medium' })}
+                                                            {formatSafeDate(order.createdAt, { dateStyle: 'medium' })}
                                                         </span>
                                                     </div>
                                                     <div>
@@ -428,22 +457,45 @@ export default function UserDashboard() {
                                                 
                                                 {/* Items List */}
                                                 <div className="p-6 divide-y divide-gold/5">
-                                                    {order.items?.map((item: any, idx: number) => (
-                                                        <div key={idx} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                                                            {item.imageUrl && (
-                                                                <div className="w-12 h-12 bg-zinc-50 border border-gold/10 rounded-xl overflow-hidden flex-shrink-0">
-                                                                    <LazyImage src={item.imageUrl} className="w-full h-full object-cover" alt="" />
+                                                    {order.items?.map((item: any, idx: number) => {
+                                                        const parsed = parseOrderItem(item, order);
+                                                        return (
+                                                            <div key={idx} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
+                                                                {item.imageUrl && (
+                                                                    <div className="w-14 h-14 bg-zinc-50 border border-gold/10 rounded-xl overflow-hidden flex-shrink-0">
+                                                                        <LazyImage src={item.imageUrl} className="w-full h-full object-cover" alt={parsed.cleanTitle} />
+                                                                    </div>
+                                                                )}
+                                                                <div className="flex-grow">
+                                                                    <h4 className="text-xs font-bold text-charcoal leading-tight">{parsed.cleanTitle}</h4>
+                                                                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                                        {parsed.categoryType === 'Attar' && (
+                                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                                                                <span>🌿</span>
+                                                                                <span>Attar (Ittar) • {parsed.size || '6ml'}</span>
+                                                                            </span>
+                                                                        )}
+                                                                        {parsed.categoryType === 'Perfume' && (
+                                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                                                                                <span>✨</span>
+                                                                                <span>Perfume (Spray) • {parsed.size || '50-60ml'}</span>
+                                                                            </span>
+                                                                        )}
+                                                                        {parsed.categoryType === 'Jewellery' && (
+                                                                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 flex items-center gap-1">
+                                                                                <span>💎</span>
+                                                                                <span>Jewellery</span>
+                                                                            </span>
+                                                                        )}
+                                                                        <span className="text-[10px] text-charcoal/50">Qty: {item.quantity || 1}</span>
+                                                                    </div>
                                                                 </div>
-                                                            )}
-                                                            <div className="flex-grow">
-                                                                <h4 className="text-xs font-bold text-charcoal leading-tight">{item.productTitle}</h4>
-                                                                <p className="text-[10px] text-charcoal/50 mt-1">Qty: {item.quantity || 1}</p>
+                                                                <div className="text-xs font-bold text-gold text-right">
+                                                                    ₹{(item.price || 0).toLocaleString()}
+                                                                </div>
                                                             </div>
-                                                            <div className="text-xs font-bold text-gold text-right">
-                                                                ₹{(item.price || 0).toLocaleString()}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                                 
                                                 {/* Total and Shipping Info */}

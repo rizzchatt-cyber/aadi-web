@@ -1,5 +1,5 @@
 export const getOptimizedImageUrl = (url: string | undefined | null): string => {
-    if (!url) return 'https://placehold.co/800x800?text=Product';
+    if (!url || typeof url !== 'string') return 'https://placehold.co/800x800?text=Product';
     try {
         let cleanUrl = url;
         if (url.includes('wsrv.nl')) {
@@ -50,7 +50,7 @@ export const getOptimizedImageUrl = (url: string | undefined | null): string => 
 
 // Returns an array of fallback URLs to try in order
 export const getImageFallbacks = (url: string | undefined | null): string[] => {
-    if (!url) return ['https://placehold.co/800x800?text=Product'];
+    if (!url || typeof url !== 'string') return ['https://placehold.co/800x800?text=Product'];
     try {
         let cleanUrl = url;
         if (url.includes('wsrv.nl')) {

@@ -151,7 +151,11 @@ export default function Collections() {
               productTitle: itemTitle,
               price: finalPrice,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1
+              quantity: 1,
+              type: selectedVariant ? selectedVariant.type : null,
+              size: selectedVariant ? selectedVariant.size : null,
+              sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+              selectedVariant: selectedVariant || null
             }
           ],
           totalAmount: finalPrice,
@@ -183,7 +187,11 @@ export default function Collections() {
               productTitle: itemTitle,
               price: finalPrice,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1
+              quantity: 1,
+              type: selectedVariant ? selectedVariant.type : null,
+              size: selectedVariant ? selectedVariant.size : null,
+              sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+              selectedVariant: selectedVariant || null
             }
           ],
           totalAmount: finalPrice,
@@ -221,7 +229,11 @@ export default function Collections() {
                   productTitle: itemTitle,
                   price: finalPrice,
                   imageUrl: selectedProduct.images?.[0] || '',
-                  quantity: 1
+                  quantity: 1,
+                  type: selectedVariant ? selectedVariant.type : null,
+                  size: selectedVariant ? selectedVariant.size : null,
+                  sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+                  selectedVariant: selectedVariant || null
                 }
               ],
               totalAmount: finalPrice,
@@ -288,9 +300,15 @@ export default function Collections() {
       result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (sortBy === 'newest') {
       result = [...result].sort((a, b) => {
-        const dateA = new Date(a.createdAt || 0).getTime();
-        const dateB = new Date(b.createdAt || 0).getTime();
-        return dateB - dateA;
+        const getTime = (val: any) => {
+          if (!val) return 0;
+          if (typeof val?.toMillis === 'function') return val.toMillis();
+          if (typeof val?.toDate === 'function') return val.toDate().getTime();
+          if (typeof val?.seconds === 'number') return val.seconds * 1000;
+          const t = new Date(val).getTime();
+          return isNaN(t) ? 0 : t;
+        };
+        return getTime(b.createdAt) - getTime(a.createdAt);
       });
     }
 

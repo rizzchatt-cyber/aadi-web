@@ -31,7 +31,14 @@ import {
     Clock,
     CreditCard,
     Coins,
-    Sparkles
+    Sparkles,
+    Eye,
+    TrendingUp,
+    Printer,
+    ArrowUpDown,
+    Phone,
+    Truck,
+    Package
 } from 'lucide-react';
 import { db, auth } from '../firebase/config';
 
@@ -52,6 +59,8 @@ import { useAuth } from '../context/AuthContext';
 import DriveImage from '../components/DriveImage';
 import HLSVideo from '../components/HLSVideo';
 import { checkoutWithRazorpay } from '../utils/razorpay';
+import OrderDetailsModal from '../components/OrderDetailsModal';
+import { parseOrderItem, getOrderStatusMeta, formatSafeDate, formatSafeOrderId, formatSafeCurrency } from '../utils/orderItemHelpers';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -113,6 +122,8 @@ export default function AdminDashboard() {
     // Orders Filtering, Searching, & Notification States
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
     const [orderFilter, setOrderFilter] = useState('all');
+    const [orderSort, setOrderSort] = useState<'newest' | 'oldest' | 'amount_high' | 'amount_low'>('newest');
+    const [selectedOrderForDetails, setSelectedOrderForDetails] = useState<any | null>(null);
     const [notifications, setNotifications] = useState<{ id: string; orderId: string; message: string }[]>([]);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>(
         typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'default'
@@ -194,18 +205,78 @@ export default function AdminDashboard() {
         }, 8000);
     };
 
+    const orderCounts = {
+        all: orders.length,
+        cod_pending: orders.filter(o => (o.status || 'paid') === 'cod_pending').length,
+        upi_pending: orders.filter(o => o.status === 'upi_pending').length,
+        paid: orders.filter(o => (o.status || 'paid') === 'paid').length,
+        approved: orders.filter(o => o.status === 'approved').length,
+        shipped: orders.filter(o => o.status === 'shipped').length,
+        completed: orders.filter(o => o.status === 'completed').length,
+        rejected: orders.filter(o => o.status === 'rejected').length,
+        cancelled: orders.filter(o => o.status === 'cancelled').length,
+    };
+
+    const totalRevenue = orders
+        .filter(o => ['paid', 'approved', 'shipped', 'completed'].includes(o.status || 'paid'))
+        .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+
     const filteredOrders = orders.filter(order => {
-        const queryStr = orderSearchQuery.toLowerCase();
+        const queryStr = orderSearchQuery.toLowerCase().trim();
+        const matchesFilter = orderFilter === 'all' || (order.status || 'paid') === orderFilter;
+        if (!queryStr) {
+            return matchesFilter;
+        }
+
+        const itemsMatch = Array.isArray(order.items) && order.items.some((it: any) => {
+            const raw = (it.productTitle || it.title || '').toLowerCase();
+            const type = (it.type || it.selectedVariant?.type || '').toLowerCase();
+            const size = (it.size || it.selectedVariant?.size || '').toLowerCase();
+            return raw.includes(queryStr) || type.includes(queryStr) || size.includes(queryStr);
+        });
+
+        const addressMatch = order.shippingAddress && (
+            (order.shippingAddress.fullName || '').toLowerCase().includes(queryStr) ||
+            (order.shippingAddress.addressLine1 || '').toLowerCase().includes(queryStr) ||
+            (order.shippingAddress.city || '').toLowerCase().includes(queryStr) ||
+            (order.shippingAddress.state || '').toLowerCase().includes(queryStr) ||
+            (order.shippingAddress.pinCode || '').toLowerCase().includes(queryStr)
+        );
+
         const matchesSearch = 
             (order.id || '').toLowerCase().includes(queryStr) ||
             (order.userName || '').toLowerCase().includes(queryStr) ||
             (order.userEmail || '').toLowerCase().includes(queryStr) ||
             (order.userPhone || '').toLowerCase().includes(queryStr) ||
-            (order.paymentId || '').toLowerCase().includes(queryStr);
+            (order.paymentId || '').toLowerCase().includes(queryStr) ||
+            (order.courierPartner || '').toLowerCase().includes(queryStr) ||
+            (order.trackingNumber || '').toLowerCase().includes(queryStr) ||
+            itemsMatch ||
+            addressMatch;
             
-        const matchesFilter = orderFilter === 'all' || (order.status || 'paid') === orderFilter;
-        
         return matchesSearch && matchesFilter;
+    });
+
+    const getOrderTime = (val: any): number => {
+        if (!val) return 0;
+        if (typeof val?.toMillis === 'function') return val.toMillis();
+        if (typeof val?.toDate === 'function') return val.toDate().getTime();
+        if (typeof val?.seconds === 'number') return val.seconds * 1000;
+        const t = new Date(val).getTime();
+        return isNaN(t) ? 0 : t;
+    };
+
+    const sortedOrders = [...filteredOrders].sort((a, b) => {
+        if (orderSort === 'oldest') {
+            return getOrderTime(a.createdAt) - getOrderTime(b.createdAt);
+        }
+        if (orderSort === 'amount_high') {
+            return (Number(b.totalAmount) || 0) - (Number(a.totalAmount) || 0);
+        }
+        if (orderSort === 'amount_low') {
+            return (Number(a.totalAmount) || 0) - (Number(b.totalAmount) || 0);
+        }
+        return getOrderTime(b.createdAt) - getOrderTime(a.createdAt);
     });
 
     // UI States
@@ -1392,11 +1463,11 @@ export default function AdminDashboard() {
                     <nav className="space-y-2 flex-grow">
                         {[
                             { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-                            { id: 'products', label: 'Products', icon: ShoppingBag },
-                            { id: 'categories', label: 'Categories', icon: Grid },
-                            { id: 'banners', label: 'Banners', icon: ImageIcon },
-                            { id: 'carts', label: 'Carts', icon: ShoppingCart },
-                            { id: 'orders', label: 'Orders & Payments', icon: CreditCard },
+                            { id: 'orders', label: 'Orders & Payments', icon: CreditCard, count: orders.length, badge: orderCounts.cod_pending > 0 ? `${orderCounts.cod_pending} New` : undefined },
+                            { id: 'products', label: 'Products', icon: ShoppingBag, count: stats.products },
+                            { id: 'carts', label: 'Active Carts', icon: ShoppingCart, count: stats.carts },
+                            { id: 'categories', label: 'Categories', icon: Grid, count: stats.categories },
+                            { id: 'banners', label: 'Banners', icon: ImageIcon, count: stats.banners },
                             { id: 'settings', label: 'Store Settings', icon: Bell },
                             { id: 'testPayment', label: 'Payment Test', icon: Coins },
                         ].map(item => (
@@ -1405,12 +1476,23 @@ export default function AdminDashboard() {
                                 whileHover={{ x: 4, backgroundColor: 'rgba(191, 149, 63, 0.1)' }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => { setActiveTab(item.id); setSelectedProductIds([]); }}
-                                className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-bold transition-all uppercase tracking-widest ${
+                                className={`w-full flex items-center justify-between px-6 py-4 rounded-2xl text-sm font-bold transition-all uppercase tracking-widest cursor-pointer ${
                                     activeTab === item.id ? 'gold-gradient text-white shadow-xl shadow-gold/10' : 'text-white/60 hover:text-white'
                                 }`}
                             >
-                                <item.icon size={18} />
-                                <span>{item.label}</span>
+                                <div className="flex items-center gap-4">
+                                    <item.icon size={18} />
+                                    <span>{item.label}</span>
+                                </div>
+                                {item.badge ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-xs">
+                                        {item.badge}
+                                    </span>
+                                ) : (item.count !== undefined) ? (
+                                    <span className={`text-xs font-mono font-medium ${activeTab === item.id ? 'text-white/90' : 'text-white/30'}`}>
+                                        {item.count}
+                                    </span>
+                                ) : null}
                             </motion.button>
                         ))}
                     </nav>
@@ -1540,32 +1622,213 @@ export default function AdminDashboard() {
                     {/* Dashboard Tab */}
                     {activeTab === 'dashboard' && (
                         <div className="space-y-8">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 md:gap-6">
-                                <div className="bg-white border border-gold/10 p-6 rounded-[24px] group hover:border-gold/30 transition-all shadow-sm">
-                                    <ShoppingBag className="text-gold mb-4" size={28} />
-                                    <h3 className="text-3xl font-serif mb-1 text-charcoal">{stats.products}</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Live Products</p>
+                            {/* KPI Stat Cards (Clickable) */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 md:gap-5">
+                                <div className="bg-gradient-to-br from-gold/15 via-white to-amber-50/40 border border-gold/30 p-5 rounded-[24px] shadow-sm flex flex-col justify-between">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <TrendingUp className="text-gold" size={24} />
+                                        <span className="text-[9px] font-bold uppercase tracking-wider text-gold bg-gold/10 px-2 py-0.5 rounded-full">Revenue</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-black text-charcoal">₹{totalRevenue.toLocaleString()}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Paid Orders Value</p>
+                                    </div>
                                 </div>
-                                <div className="bg-white border border-gold/10 p-6 rounded-[24px] group hover:border-gold/30 transition-all shadow-sm">
-                                    <Grid className="text-gold mb-4" size={28} />
-                                    <h3 className="text-3xl font-serif mb-1 text-charcoal">{stats.categories}</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Categories</p>
+
+                                <motion.div
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => setActiveTab('orders')}
+                                    className="bg-white border border-gold/15 p-5 rounded-[24px] hover:border-gold/40 hover:shadow-md transition-all shadow-sm cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <CreditCard className="text-gold group-hover:scale-110 transition-transform" size={24} />
+                                        {orderCounts.cod_pending > 0 && (
+                                            <span className="text-[9px] font-black uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full animate-pulse">
+                                                {orderCounts.cod_pending} New
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-bold text-charcoal">{stats.orders}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Orders & Payments</p>
+                                    </div>
+                                </motion.div>
+
+                                <motion.div
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => setActiveTab('products')}
+                                    className="bg-white border border-gold/15 p-5 rounded-[24px] hover:border-gold/40 hover:shadow-md transition-all shadow-sm cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <ShoppingBag className="text-gold group-hover:scale-110 transition-transform" size={24} />
+                                        <span className="text-[9px] font-bold text-charcoal/40">Catalog</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-bold text-charcoal">{stats.products}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Live Products</p>
+                                    </div>
+                                </motion.div>
+
+                                <motion.div
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => setActiveTab('carts')}
+                                    className="bg-white border border-gold/15 p-5 rounded-[24px] hover:border-gold/40 hover:shadow-md transition-all shadow-sm cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <ShoppingCart className="text-gold group-hover:scale-110 transition-transform" size={24} />
+                                        <span className="text-[9px] font-bold text-charcoal/40">Active</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-bold text-charcoal">{stats.carts}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Active Carts</p>
+                                    </div>
+                                </motion.div>
+
+                                <motion.div
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => setActiveTab('categories')}
+                                    className="bg-white border border-gold/15 p-5 rounded-[24px] hover:border-gold/40 hover:shadow-md transition-all shadow-sm cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <Grid className="text-gold group-hover:scale-110 transition-transform" size={24} />
+                                        <span className="text-[9px] font-bold text-charcoal/40">Taxonomy</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-bold text-charcoal">{stats.categories}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Categories</p>
+                                    </div>
+                                </motion.div>
+
+                                <motion.div
+                                    whileHover={{ y: -3 }}
+                                    onClick={() => setActiveTab('banners')}
+                                    className="bg-white border border-gold/15 p-5 rounded-[24px] hover:border-gold/40 hover:shadow-md transition-all shadow-sm cursor-pointer flex flex-col justify-between group"
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <ImageIcon className="text-gold group-hover:scale-110 transition-transform" size={24} />
+                                        <span className="text-[9px] font-bold text-charcoal/40">Visuals</span>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-serif font-bold text-charcoal">{stats.banners}</h3>
+                                        <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/40 mt-0.5">Visual Banners</p>
+                                    </div>
+                                </motion.div>
+                            </div>
+
+                            {/* Recent Orders Live Stream Card */}
+                            <div className="bg-white border border-gold/15 rounded-[32px] p-6 md:p-8 shadow-sm">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-gold/10">
+                                    <div>
+                                        <div className="flex items-center gap-2.5">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            <h3 className="font-serif font-bold text-xl text-charcoal">
+                                                Recent Orders & Fragrance Dispatch Feed
+                                            </h3>
+                                        </div>
+                                        <p className="text-xs text-charcoal/50 mt-1">
+                                            Latest orders placed by customers with exact perfume type and ml size. Click any order to open full details.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setActiveTab('orders')}
+                                        className="px-5 py-2.5 bg-gold/10 hover:bg-gold/20 text-gold rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-colors cursor-pointer self-start sm:self-auto"
+                                    >
+                                        <span>View All Orders ({orders.length})</span>
+                                        <ChevronRight size={14} />
+                                    </button>
                                 </div>
-                                <div className="bg-white border border-gold/10 p-6 rounded-[24px] group hover:border-gold/30 transition-all shadow-sm">
-                                    <CreditCard className="text-gold mb-4" size={28} />
-                                    <h3 className="text-3xl font-serif mb-1 text-charcoal">{stats.orders}</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Orders & Payments</p>
-                                </div>
-                                <div className="bg-white border border-gold/10 p-6 rounded-[24px] group hover:border-gold/30 transition-all shadow-sm">
-                                    <ShoppingCart className="text-gold mb-4" size={28} />
-                                    <h3 className="text-3xl font-serif mb-1 text-charcoal">{stats.carts}</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Active Carts</p>
-                                </div>
-                                <div className="bg-white border border-gold/10 p-6 rounded-[24px] group hover:border-gold/30 transition-all shadow-sm">
-                                    <ImageIcon className="text-gold mb-4" size={28} />
-                                    <h3 className="text-3xl font-serif mb-1 text-charcoal">{stats.banners}</h3>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-charcoal/30">Visual Banners</p>
-                                </div>
+
+                                {orders.length === 0 ? (
+                                    <div className="py-12 text-center text-charcoal/40 italic">
+                                        No customer orders recorded yet. Place a test order to verify the workflow!
+                                    </div>
+                                ) : (
+                                    <div className="divide-y divide-gold/10 mt-2">
+                                        {orders.slice(0, 5).map((order) => {
+                                            const statusMeta = getOrderStatusMeta(order.status || (order.paymentMethod === 'cod' ? 'cod_pending' : 'paid'));
+                                            return (
+                                                <div
+                                                    key={order.id}
+                                                    onClick={() => setSelectedOrderForDetails(order)}
+                                                    className="py-4.5 px-3 rounded-2xl hover:bg-gold/[0.03] transition-all cursor-pointer flex flex-col md:flex-row items-start md:items-center justify-between gap-4 group"
+                                                >
+                                                    {/* Left: Customer & Date */}
+                                                    <div className="flex items-center gap-4 min-w-[200px]">
+                                                        <div className="w-10 h-10 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold shrink-0">
+                                                            <Package size={18} />
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="font-bold text-sm text-charcoal group-hover:text-gold transition-colors flex items-center gap-2">
+                                                                <span>{order.userName || 'Guest Customer'}</span>
+                                                                <span className="font-mono text-[10px] text-charcoal/40 font-normal">#{formatSafeOrderId(order.id, 6)}</span>
+                                                            </div>
+                                                            <div className="text-[11px] text-charcoal/50 mt-0.5">
+                                                                {formatSafeDate(order.createdAt)}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Center: Fragrance Items with Badges */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            {Array.isArray(order.items) && order.items.map((it: any, i: number) => {
+                                                                const parsed = parseOrderItem(it, order);
+                                                                return (
+                                                                    <div key={i} className="flex items-center gap-1.5 bg-zinc-50 border border-gold/10 px-2.5 py-1 rounded-xl text-xs">
+                                                                        <span className="font-bold text-charcoal">{parsed.cleanTitle}</span>
+                                                                        {parsed.categoryType === 'Attar' && (
+                                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                                                🌿 Attar • {parsed.size || '6ml'}
+                                                                            </span>
+                                                                        )}
+                                                                        {parsed.categoryType === 'Perfume' && (
+                                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                                                                ✨ Perfume • {parsed.size || '50-60ml'}
+                                                                            </span>
+                                                                        )}
+                                                                        {parsed.categoryType === 'Jewellery' && (
+                                                                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                                                                                💎 Jewel
+                                                                            </span>
+                                                                        )}
+                                                                        {(it.quantity > 1) && <span className="text-[10px] text-charcoal/50 font-bold">x{it.quantity}</span>}
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Right: Amount & Status & Action */}
+                                                    <div className="flex items-center gap-4 shrink-0 self-end md:self-center">
+                                                        <div className="text-right">
+                                                            <span className="font-serif font-black text-base text-charcoal block">
+                                                                {formatSafeCurrency(order.totalAmount)}
+                                                            </span>
+                                                            <span className="text-[10px] text-charcoal/50 uppercase font-bold block">
+                                                                {order.paymentMethod === 'cod' ? 'COD' : 'Paid Online'}
+                                                            </span>
+                                                        </div>
+
+                                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${statusMeta.badgeBg}`}>
+                                                            {statusMeta.label}
+                                                        </span>
+
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSelectedOrderForDetails(order);
+                                                            }}
+                                                            className="p-2 rounded-xl text-charcoal/40 hover:text-gold hover:bg-gold/10 transition-colors"
+                                                            title="View Order Details"
+                                                        >
+                                                            <Eye size={17} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
 
                             {/* Seeding Cards */}
@@ -1733,42 +1996,36 @@ export default function AdminDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gold/10">
-                                        <AnimatePresence mode="popLayout">
-                                            {carts.map((cart, idx) => (
-                                                <motion.tr
-                                                    key={cart.id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.98 }}
-                                                    transition={{ delay: idx * 0.03 }}
-                                                    className="group hover:bg-gold/[0.02] transition-colors"
-                                                >
-                                                    <td className="px-8 py-5 text-charcoal text-sm font-medium">
-                                                        {cart.userEmail}
-                                                    </td>
-                                                    <td className="px-8 py-5 text-charcoal">
-                                                        <div className="flex items-center gap-4">
-                                                            {cart.imageUrl && (
-                                                                <div className="w-12 h-12 rounded-xl border border-gold/10 overflow-hidden bg-white shadow-sm flex-shrink-0">
-                                                                    <DriveImage src={cart.imageUrl} className="w-full h-full object-cover" alt={cart.productTitle} />
-                                                                </div>
-                                                            )}
-                                                            <div className="font-bold text-charcoal text-sm">{cart.productTitle}</div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-5 font-serif text-charcoal">
-                                                        {cart.price === 'On Request' ? (
-                                                            <span className="text-sm font-bold text-green-600 tracking-wider uppercase">Exclusive Pricing</span>
-                                                        ) : (
-                                                            `₹${(cart.price || 0).toLocaleString()}`
+                                        {carts.map((cart, idx) => (
+                                            <tr
+                                                key={cart.id || idx}
+                                                className="group hover:bg-gold/[0.02] transition-colors"
+                                            >
+                                                <td className="px-8 py-5 text-charcoal text-sm font-medium">
+                                                    {cart.userEmail || 'Guest'}
+                                                </td>
+                                                <td className="px-8 py-5 text-charcoal">
+                                                    <div className="flex items-center gap-4">
+                                                        {cart.imageUrl && (
+                                                            <div className="w-12 h-12 rounded-xl border border-gold/10 overflow-hidden bg-white shadow-sm flex-shrink-0">
+                                                                <DriveImage src={cart.imageUrl} className="w-full h-full object-cover" alt={cart.productTitle || ''} />
+                                                            </div>
                                                         )}
-                                                    </td>
-                                                    <td className="px-8 py-5 text-right text-xs text-charcoal/50">
-                                                        {new Date(cart.createdAt).toLocaleDateString()}
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </AnimatePresence>
+                                                        <div className="font-bold text-charcoal text-sm">{cart.productTitle || 'Product'}</div>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 font-serif text-charcoal">
+                                                    {cart.price === 'On Request' ? (
+                                                        <span className="text-sm font-bold text-green-600 tracking-wider uppercase">Exclusive Pricing</span>
+                                                    ) : (
+                                                        formatSafeCurrency(cart.price)
+                                                    )}
+                                                </td>
+                                                <td className="px-8 py-5 text-right text-xs text-charcoal/50">
+                                                    {formatSafeDate(cart.createdAt, { dateStyle: 'medium' })}
+                                                </td>
+                                            </tr>
+                                        ))}
                                         {carts.length === 0 && (
                                             <tr>
                                                 <td colSpan={4} className="px-8 py-12 text-center text-charcoal/40 text-sm">
@@ -1790,204 +2047,331 @@ export default function AdminDashboard() {
                             animate={{ opacity: 1 }}
                             className="bg-white border border-gold/10 rounded-[40px] overflow-hidden shadow-sm"
                         >
-                            {/* Search and Filters */}
-                            <div className="p-6 border-b border-gold/10 flex flex-col md:flex-row gap-4 items-center justify-between bg-white">
-                                <div className="relative w-full md:w-96">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/30" size={16} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by name, email, phone, order ID..."
-                                        value={orderSearchQuery}
-                                        onChange={(e) => setOrderSearchQuery(e.target.value)}
-                                        className="w-full bg-zinc-50 border border-gold/10 rounded-xl py-2.5 pl-11 pr-4 text-xs text-charcoal focus:outline-none focus:border-gold transition-all"
-                                    />
+                            {/* Orders KPI Header Ribbons */}
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 p-6 bg-zinc-50 border-b border-gold/10">
+                                <div className="bg-white p-3.5 rounded-2xl border border-gold/10 shadow-xs">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-charcoal/40 block">Total Orders</span>
+                                    <span className="text-xl font-serif font-black text-charcoal mt-0.5 block">{orderCounts.all}</span>
                                 </div>
-                                <div className="flex gap-2 overflow-x-auto max-w-full w-full md:w-auto pb-2 md:pb-0 scrollbar-hide">
+                                <div className="bg-white p-3.5 rounded-2xl border border-gold/10 shadow-xs">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-amber-700 block flex items-center gap-1">
+                                        <Clock size={11} /> COD Pending
+                                    </span>
+                                    <span className="text-xl font-serif font-black text-amber-800 mt-0.5 block">{orderCounts.cod_pending}</span>
+                                </div>
+                                <div className="bg-white p-3.5 rounded-2xl border border-gold/10 shadow-xs">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-700 block flex items-center gap-1">
+                                        <CheckCircle2 size={11} /> Paid / Approved
+                                    </span>
+                                    <span className="text-xl font-serif font-black text-emerald-800 mt-0.5 block">{orderCounts.paid + orderCounts.approved}</span>
+                                </div>
+                                <div className="bg-white p-3.5 rounded-2xl border border-gold/10 shadow-xs">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-purple-700 block flex items-center gap-1">
+                                        <Truck size={11} /> In Transit (Shipped)
+                                    </span>
+                                    <span className="text-xl font-serif font-black text-purple-800 mt-0.5 block">{orderCounts.shipped}</span>
+                                </div>
+                                <div className="bg-white p-3.5 rounded-2xl border border-gold/20 shadow-xs bg-gradient-to-br from-white to-gold/5 col-span-2 sm:col-span-1">
+                                    <span className="text-[10px] uppercase font-bold tracking-wider text-gold block">Total Revenue</span>
+                                    <span className="text-xl font-serif font-black text-gold mt-0.5 block">₹{totalRevenue.toLocaleString()}</span>
+                                </div>
+                            </div>
+
+                            {/* Search, Sort, and Status Filters */}
+                            <div className="p-6 border-b border-gold/10 flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between bg-white">
+                                <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center flex-1 max-w-2xl">
+                                    <div className="relative flex-1">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/40" size={16} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search customer, phone, order ID, perfume name, or ml (e.g. 6ml, Flora)..."
+                                            value={orderSearchQuery}
+                                            onChange={(e) => setOrderSearchQuery(e.target.value)}
+                                            className="w-full bg-zinc-50 border border-gold/15 rounded-xl py-2.5 pl-11 pr-4 text-xs text-charcoal focus:outline-none focus:border-gold transition-all"
+                                        />
+                                        {orderSearchQuery && (
+                                            <button
+                                                onClick={() => setOrderSearchQuery('')}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal/30 hover:text-charcoal"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        <ArrowUpDown size={14} className="text-gold/60 hidden sm:inline" />
+                                        <select
+                                            value={orderSort}
+                                            onChange={(e: any) => setOrderSort(e.target.value)}
+                                            className="bg-zinc-50 border border-gold/15 rounded-xl px-3 py-2.5 text-xs text-charcoal font-medium focus:outline-none focus:border-gold cursor-pointer"
+                                        >
+                                            <option value="newest">Sort: Newest First</option>
+                                            <option value="oldest">Sort: Oldest First</option>
+                                            <option value="amount_high">Amount: High to Low</option>
+                                            <option value="amount_low">Amount: Low to High</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-1.5 overflow-x-auto max-w-full pb-2 lg:pb-0 scrollbar-hide">
                                     {[
-                                        { id: 'all', label: 'All Orders' },
-                                        { id: 'cod_pending', label: 'COD Pending' },
-                                        { id: 'paid', label: 'Paid Online' },
-                                        { id: 'approved', label: 'Approved' },
-                                        { id: 'shipped', label: 'Shipped' },
-                                        { id: 'completed', label: 'Completed' },
-                                        { id: 'rejected', label: 'Rejected' },
-                                        { id: 'cancelled', label: 'Cancelled' }
+                                        { id: 'all', label: 'All', count: orderCounts.all },
+                                        { id: 'cod_pending', label: 'COD Pending', count: orderCounts.cod_pending },
+                                        { id: 'paid', label: 'Paid Online', count: orderCounts.paid },
+                                        { id: 'approved', label: 'Approved', count: orderCounts.approved },
+                                        { id: 'shipped', label: 'Shipped', count: orderCounts.shipped },
+                                        { id: 'completed', label: 'Completed', count: orderCounts.completed },
+                                        { id: 'rejected', label: 'Rejected', count: orderCounts.rejected },
+                                        { id: 'cancelled', label: 'Cancelled', count: orderCounts.cancelled }
                                     ].map((tab) => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setOrderFilter(tab.id)}
-                                            className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap ${
+                                            className={`px-3 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
                                                 orderFilter === tab.id
                                                     ? 'bg-gold text-white shadow-sm'
-                                                    : 'bg-zinc-50 border border-gold/5 text-charcoal/60 hover:border-gold/20'
+                                                    : 'bg-zinc-50 border border-gold/10 text-charcoal/60 hover:border-gold/30'
                                             }`}
                                         >
-                                            {tab.label}
+                                            <span>{tab.label}</span>
+                                            <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                                                orderFilter === tab.id ? 'bg-white/25 text-white' : 'bg-charcoal/5 text-charcoal/60'
+                                            }`}>
+                                                {tab.count}
+                                            </span>
                                         </button>
                                     ))}
                                 </div>
                             </div>
 
+                            {/* Orders Table */}
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left">
                                     <thead>
-                                        <tr className="border-b border-gold/5 bg-gold/5">
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Order Date</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Customer Details</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Items Ordered</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Shipping Address</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Payment Info</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40 text-right">Total Amount</th>
-                                            <th className="px-8 py-6 text-[10px] font-bold uppercase tracking-widest text-charcoal/40 text-right">Actions</th>
+                                        <tr className="border-b border-gold/10 bg-gold/5">
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Date & Order ID</th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Customer</th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40 min-w-[280px]">
+                                                Perfume & Size (ML) Details
+                                            </th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Destination</th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40">Payment & Status</th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40 text-right">Total</th>
+                                            <th className="px-6 py-5 text-[10px] font-bold uppercase tracking-widest text-charcoal/40 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gold/10">
-                                        <AnimatePresence mode="popLayout">
-                                            {filteredOrders.map((order, idx) => (
-                                                <motion.tr
-                                                    key={order.id}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, scale: 0.98 }}
-                                                    transition={{ delay: idx * 0.03 }}
-                                                    className="group hover:bg-gold/[0.02] transition-colors"
+                                        {sortedOrders.map((order, idx) => {
+                                            const statusMeta = getOrderStatusMeta(order.status || (order.paymentMethod === 'cod' ? 'cod_pending' : 'paid'));
+                                            return (
+                                                <tr
+                                                    key={order.id || idx}
+                                                    onClick={() => setSelectedOrderForDetails(order)}
+                                                    className="group hover:bg-gold/[0.03] transition-colors cursor-pointer"
                                                 >
-                                                    <td className="px-8 py-5 text-xs text-charcoal/60 whitespace-nowrap">
-                                                        {new Date(order.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                                                    {/* Date & Order ID */}
+                                                    <td className="px-6 py-5 text-xs whitespace-nowrap">
+                                                        <div className="font-mono font-bold text-charcoal text-xs flex items-center gap-1.5">
+                                                            <span>#{formatSafeOrderId(order.id, 8)}</span>
+                                                        </div>
+                                                        <div className="text-[11px] text-charcoal/50 mt-1">
+                                                            {formatSafeDate(order.createdAt)}
+                                                        </div>
+                                                        <span className="text-[9px] text-gold font-bold uppercase tracking-wider block mt-1">
+                                                            Click row to view
+                                                        </span>
                                                     </td>
-                                                    <td className="px-8 py-5 text-charcoal">
-                                                        <div className="font-bold text-sm">{order.userName || 'Guest'}</div>
-                                                        <div className="text-xs text-charcoal/50 mt-0.5">{order.userEmail}</div>
-                                                        <div className="text-xs text-gold font-medium mt-0.5">{order.userPhone}</div>
+
+                                                    {/* Customer */}
+                                                    <td className="px-6 py-5 text-charcoal">
+                                                        <div className="font-bold text-sm text-charcoal group-hover:text-gold transition-colors">
+                                                            {order.userName || 'Guest Customer'}
+                                                        </div>
+                                                        <div className="text-xs text-gold font-medium mt-0.5 font-mono">
+                                                            {order.userPhone || 'No Phone'}
+                                                        </div>
+                                                        <div className="text-[11px] text-charcoal/40 truncate max-w-[140px]" title={order.userEmail}>
+                                                            {order.userEmail}
+                                                        </div>
                                                     </td>
-                                                    <td className="px-8 py-5 text-charcoal max-w-xs">
-                                                        <div className="space-y-3">
-                                                            {order.items?.map((item: any, i: number) => (
-                                                                <div key={i} className="flex items-center gap-3">
-                                                                    {item.imageUrl && (
-                                                                        <div className="w-10 h-10 rounded-lg border border-gold/10 overflow-hidden bg-white shadow-xs flex-shrink-0">
-                                                                            <DriveImage src={item.imageUrl} className="w-full h-full object-cover" alt="" />
+
+                                                    {/* Purchased Items with Prominent ATTAR / PERFUME & ML BADGES */}
+                                                    <td className="px-6 py-5 text-charcoal">
+                                                        <div className="space-y-2.5">
+                                                            {Array.isArray(order.items) && order.items.map((item: any, i: number) => {
+                                                                const parsed = parseOrderItem(item, order);
+                                                                return (
+                                                                    <div key={i} className="flex items-start gap-3">
+                                                                        {item.imageUrl && (
+                                                                            <div className="w-11 h-11 rounded-xl border border-gold/15 overflow-hidden bg-white shadow-xs shrink-0 mt-0.5">
+                                                                                <DriveImage src={item.imageUrl} className="w-full h-full object-cover" alt="" />
+                                                                            </div>
+                                                                        )}
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <div className="text-xs font-bold text-charcoal leading-snug">
+                                                                                {parsed.cleanTitle}
+                                                                            </div>
+
+                                                                            {/* High Visibility Badges for Type and ML */}
+                                                                            <div className="mt-1 flex items-center gap-1.5 flex-wrap">
+                                                                                {parsed.categoryType === 'Attar' && (
+                                                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                                                                                        <span>🌿</span>
+                                                                                        <span>ATTAR • {parsed.size || '6ml'}</span>
+                                                                                    </span>
+                                                                                )}
+                                                                                {parsed.categoryType === 'Perfume' && (
+                                                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-800 border border-indigo-300 flex items-center gap-1">
+                                                                                        <span>✨</span>
+                                                                                        <span>PERFUME • {parsed.size || '50-60ml'}</span>
+                                                                                    </span>
+                                                                                )}
+                                                                                {parsed.categoryType === 'Jewellery' && (
+                                                                                    <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 border border-amber-300">
+                                                                                        💎 JEWELLERY
+                                                                                    </span>
+                                                                                )}
+                                                                                <span className="text-[10px] text-charcoal/50 font-bold">
+                                                                                    {formatSafeCurrency(item.price)}
+                                                                                </span>
+                                                                                {(item.quantity > 1) && (
+                                                                                    <span className="text-[9px] font-black text-charcoal/60 bg-zinc-100 px-1.5 py-0.2 rounded">
+                                                                                        x{item.quantity}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                    )}
-                                                                    <div className="min-w-0">
-                                                                        <div className="text-xs font-bold truncate max-w-[150px]" title={item.productTitle}>{item.productTitle}</div>
-                                                                        <div className="text-[10px] text-gold font-medium mt-0.5">₹{(item.price || 0).toLocaleString()}</div>
                                                                     </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </td>
+
+                                                        {/* Destination */}
+                                                        <td className="px-6 py-5 text-xs text-charcoal/70 leading-relaxed max-w-[200px]">
+                                                            {order.shippingAddress ? (
+                                                                <div>
+                                                                    <p className="font-bold text-charcoal">{order.shippingAddress.fullName}</p>
+                                                                    <p className="truncate" title={order.shippingAddress.addressLine1}>{order.shippingAddress.addressLine1}</p>
+                                                                    <p className="font-medium text-charcoal/90">
+                                                                        {order.shippingAddress.city}, {order.shippingAddress.state} - <span className="font-bold">{order.shippingAddress.pinCode}</span>
+                                                                    </p>
                                                                 </div>
-                                                            ))}
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-5 text-xs text-charcoal/70 leading-relaxed max-w-xs">
-                                                        {order.shippingAddress ? (
-                                                            <div>
-                                                                <p className="font-bold text-charcoal">{order.shippingAddress.fullName}</p>
-                                                                <p>{order.shippingAddress.addressLine1}</p>
-                                                                {order.shippingAddress.addressLine2 && <p>{order.shippingAddress.addressLine2}</p>}
-                                                                <p>{order.shippingAddress.city}, {order.shippingAddress.state} - <span className="font-bold">{order.shippingAddress.pinCode}</span></p>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-charcoal/30 italic">No Address Details</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="px-8 py-5">
-                                                        <div className="text-[10px] text-charcoal/40 font-bold uppercase tracking-wider mb-1">ID Details</div>
-                                                        <div className="text-xs font-mono font-bold text-charcoal" title="Firestore Document ID">Order: {order.id}</div>
-                                                        <div className="text-[10px] font-mono text-charcoal/50" title="Payment transaction ID">Payment: {order.paymentId || 'N/A'}</div>
-                                                        <div className="mt-2">
-                                                            <span className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wider ${
-                                                                order.paymentMethod === 'cod'
-                                                                    ? 'bg-amber-50 text-amber-600 border border-amber-200/50'
-                                                                    : 'bg-blue-50 text-blue-600 border border-blue-200/50'
-                                                            }`}>
-                                                                {order.paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Paid Online'}
-                                                            </span>
-                                                        </div>
-                                                        <div className="mt-3">
-                                                            <label className="text-[8px] font-bold uppercase text-charcoal/40 tracking-wider block mb-1">Status</label>
-                                                            <select
-                                                                value={order.status || (order.paymentMethod === 'cod' ? 'cod_pending' : 'paid')}
-                                                                onChange={async (e) => {
-                                                                    const newStatus = e.target.value;
-                                                                    try {
-                                                                        await updateDoc(doc(db, "orders", order.id), { status: newStatus });
-                                                                        alert(`Order status updated to ${newStatus}`);
-                                                                    } catch (err: any) {
-                                                                        alert(`Failed to update status: ${err.message}`);
-                                                                    }
-                                                                }}
-                                                                className="bg-white border border-gold/15 rounded-lg px-2 py-1 text-xs text-charcoal focus:outline-none focus:border-gold cursor-pointer font-sans"
-                                                            >
-                                                                <option value="cod_pending">COD Pending</option>
-                                                                <option value="paid">Paid</option>
-                                                                <option value="approved">Approved</option>
-                                                                <option value="shipped">Shipped</option>
-                                                                <option value="completed">Completed</option>
-                                                                <option value="rejected">Rejected</option>
-                                                                <option value="cancelled">Cancelled</option>
-                                                            </select>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-8 py-5 text-right font-serif font-bold text-lg text-charcoal whitespace-nowrap">
-                                                        ₹{(order.totalAmount || 0).toLocaleString()}
-                                                    </td>
-                                                    <td className="px-8 py-5 text-right whitespace-nowrap">
-                                                        <div className="flex justify-end items-center gap-2">
-                                                            {order.status === 'cod_pending' && (
-                                                                <>
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                await updateDoc(doc(db, "orders", order.id), { status: 'approved' });
-                                                                                alert("Order approved successfully!");
-                                                                            } catch (err: any) {
-                                                                                alert(`Failed to approve order: ${err.message}`);
-                                                                            }
-                                                                        }}
-                                                                        className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                                                                        title="Approve Order"
-                                                                    >
-                                                                        Approve
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={async () => {
-                                                                            try {
-                                                                                await updateDoc(doc(db, "orders", order.id), { status: 'rejected' });
-                                                                                alert("Order rejected!");
-                                                                            } catch (err: any) {
-                                                                                alert(`Failed to reject order: ${err.message}`);
-                                                                            }
-                                                                        }}
-                                                                        className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                                                                        title="Reject Order"
-                                                                    >
-                                                                        Reject
-                                                                    </button>
-                                                                </>
+                                                            ) : (
+                                                                <span className="text-charcoal/30 italic">No Address Details</span>
                                                             )}
-                                                            <button
-                                                                onClick={async () => {
-                                                                    if (!window.confirm("Are you sure you want to delete this order permanently? This cannot be undone.")) return;
-                                                                    try {
-                                                                        await deleteDoc(doc(db, "orders", order.id));
-                                                                        alert("Order deleted successfully!");
-                                                                    } catch (err: any) {
-                                                                        alert(`Failed to delete order: ${err.message}`);
-                                                                    }
-                                                                }}
-                                                                className="p-2 text-red-500 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all cursor-pointer"
-                                                                title="Delete Order Permanently"
-                                                            >
-                                                                <Trash2 size={16} />
-                                                            </button>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </AnimatePresence>
-                                        {filteredOrders.length === 0 && (
+                                                        </td>
+
+                                                        {/* Payment & Status */}
+                                                        <td className="px-6 py-5">
+                                                            <div className="mb-2">
+                                                                <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                                                                    order.paymentMethod === 'cod'
+                                                                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                                                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                                                }`}>
+                                                                    {order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid Online'}
+                                                                </span>
+                                                            </div>
+                                                            <div onClick={(e) => e.stopPropagation()}>
+                                                                <select
+                                                                    value={order.status || (order.paymentMethod === 'cod' ? 'cod_pending' : 'paid')}
+                                                                    onChange={async (e) => {
+                                                                        const newStatus = e.target.value;
+                                                                        try {
+                                                                            await updateDoc(doc(db, "orders", order.id), { status: newStatus });
+                                                                            setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o));
+                                                                        } catch (err: any) {
+                                                                            alert(`Failed to update status: ${err.message}`);
+                                                                        }
+                                                                    }}
+                                                                    className="bg-white border border-gold/20 rounded-xl px-2 py-1 text-xs text-charcoal focus:outline-none focus:border-gold cursor-pointer font-sans shadow-2xs"
+                                                                >
+                                                                    <option value="cod_pending">COD Pending</option>
+                                                                    <option value="upi_pending">UPI Pending</option>
+                                                                    <option value="paid">Paid</option>
+                                                                    <option value="approved">Approved</option>
+                                                                    <option value="shipped">Shipped</option>
+                                                                    <option value="completed">Completed</option>
+                                                                    <option value="rejected">Rejected</option>
+                                                                    <option value="cancelled">Cancelled</option>
+                                                                </select>
+                                                            </div>
+                                                        </td>
+
+                                                        {/* Total Amount */}
+                                                        <td className="px-6 py-5 text-right font-serif font-black text-lg text-charcoal whitespace-nowrap">
+                                                            ₹{(order.totalAmount || 0).toLocaleString()}
+                                                        </td>
+
+                                                        {/* Actions */}
+                                                        <td className="px-6 py-5 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                                                            <div className="flex justify-end items-center gap-2">
+                                                                <button
+                                                                    onClick={() => setSelectedOrderForDetails(order)}
+                                                                    className="px-3 py-1.5 bg-gold/10 hover:bg-gold/25 text-gold rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                                                    title="View all details, perfumes, addresses and actions"
+                                                                >
+                                                                    <Eye size={13} />
+                                                                    <span>Details</span>
+                                                                </button>
+
+                                                                {order.status === 'cod_pending' && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={async () => {
+                                                                                try {
+                                                                                    await updateDoc(doc(db, "orders", order.id), { status: 'approved' });
+                                                                                    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: 'approved' } : o));
+                                                                                } catch (err: any) {
+                                                                                    alert(`Failed to approve: ${err.message}`);
+                                                                                }
+                                                                            }}
+                                                                            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                                                                            title="Approve Order"
+                                                                        >
+                                                                            Approve
+                                                                        </button>
+                                                                    </>
+                                                                )}
+
+                                                                <button
+                                                                    onClick={async () => {
+                                                                        if (!window.confirm("Are you sure you want to delete this order permanently?")) return;
+                                                                        try {
+                                                                            await deleteDoc(doc(db, "orders", order.id));
+                                                                            setOrders(prev => prev.filter(o => o.id !== order.id));
+                                                                        } catch (err: any) {
+                                                                            alert(`Failed to delete order: ${err.message}`);
+                                                                        }
+                                                                    }}
+                                                                    className="p-2 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-all cursor-pointer"
+                                                                    title="Delete Order Permanently"
+                                                                >
+                                                                    <Trash2 size={15} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        {sortedOrders.length === 0 && (
                                             <tr>
-                                                <td colSpan={7} className="px-8 py-12 text-center text-charcoal/40 text-sm">
-                                                    No orders found matching search or filters.
+                                                <td colSpan={7} className="px-8 py-16 text-center text-charcoal/40 text-sm">
+                                                    <div className="max-w-sm mx-auto text-center space-y-3">
+                                                        <Package size={36} className="mx-auto text-gold/30" />
+                                                        <p className="font-serif font-bold text-base text-charcoal">No orders found matching criteria.</p>
+                                                        <p className="text-xs text-charcoal/50">Try clearing the search query or changing the status filter.</p>
+                                                        {(orderSearchQuery || orderFilter !== 'all') && (
+                                                            <button
+                                                                onClick={() => { setOrderSearchQuery(''); setOrderFilter('all'); }}
+                                                                className="px-4 py-2 bg-gold/10 hover:bg-gold/20 text-gold text-xs font-bold rounded-xl uppercase tracking-wider"
+                                                            >
+                                                                Reset Filters
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         )}
@@ -2000,7 +2384,7 @@ export default function AdminDashboard() {
                     {/* Categories Tab */}
                     {activeTab === 'categories' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <AnimatePresence mode="popLayout">
+                            <AnimatePresence>
                                 {categories.map((c, idx) => (
                                     <motion.div
                                         key={c.id}
@@ -3115,27 +3499,34 @@ export default function AdminDashboard() {
             </AnimatePresence>
 
             {/* Mobile Bottom Navigation */}
-            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gold/10 px-4 py-3 flex justify-around items-center shadow-[0_-10px_25px_rgba(0,0,0,0.05)]">
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gold/10 px-3 py-2 flex justify-around items-center shadow-[0_-10px_25px_rgba(0,0,0,0.05)]">
                 {[
                     { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
+                    { id: 'orders', label: 'Orders', icon: CreditCard, badge: orderCounts.cod_pending > 0 ? orderCounts.cod_pending : undefined },
                     { id: 'products', label: 'Products', icon: ShoppingBag },
+                    { id: 'carts', label: 'Carts', icon: ShoppingCart },
                     { id: 'categories', label: 'Cats', icon: Grid },
-                    { id: 'banners', label: 'Banners', icon: ImageIcon },
-                    { id: 'settings', label: 'Store', icon: Bell },
-                    { id: 'testPayment', label: 'Test', icon: Coins }
+                    { id: 'settings', label: 'Store', icon: Bell }
                 ].map(item => (
                     <button
                         key={item.id}
                         onClick={() => { setActiveTab(item.id); window.scrollTo(0,0); }}
-                        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-gold' : 'text-charcoal/30'}`}
+                        className={`flex flex-col items-center gap-0.5 transition-all relative ${activeTab === item.id ? 'text-gold' : 'text-charcoal/40'}`}
                     >
-                        <item.icon size={20} className={activeTab === item.id ? 'scale-110' : ''} />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">{item.label}</span>
+                        <div className="relative">
+                            <item.icon size={19} className={activeTab === item.id ? 'scale-110' : ''} />
+                            {item.badge && (
+                                <span className="absolute -top-1.5 -right-2 w-4 h-4 bg-amber-500 text-white rounded-full text-[9px] font-black flex items-center justify-center">
+                                    {item.badge}
+                                </span>
+                            )}
+                        </div>
+                        <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
                     </button>
                 ))}
-                <button onClick={handleLogout} className="flex flex-col items-center gap-1 text-red-400">
-                    <LogOut size={20} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Exit</span>
+                <button onClick={handleLogout} className="flex flex-col items-center gap-0.5 text-red-400">
+                    <LogOut size={19} />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Exit</span>
                 </button>
             </div>
 
@@ -3598,14 +3989,19 @@ export default function AdminDashboard() {
                                 <p className="text-xs text-white/90 font-medium leading-relaxed">{notif.message}</p>
                                 <button
                                     onClick={() => {
-                                        setActiveTab('orders');
-                                        setOrderSearchQuery(notif.orderId);
-                                        setOrderFilter('all');
+                                        const found = orders.find(o => o.id === notif.orderId);
+                                        if (found) {
+                                            setSelectedOrderForDetails(found);
+                                        } else {
+                                            setActiveTab('orders');
+                                            setOrderSearchQuery(notif.orderId);
+                                            setOrderFilter('all');
+                                        }
                                         setNotifications(prev => prev.filter(n => n.id !== notif.id));
                                     }}
                                     className="mt-2 text-[9px] font-bold text-gold uppercase tracking-wider hover:underline cursor-pointer"
                                 >
-                                    View Details
+                                    View Full Details
                                 </button>
                             </div>
                             
@@ -3619,6 +4015,21 @@ export default function AdminDashboard() {
                     ))}
                 </AnimatePresence>
             </div>
+
+            {/* Order Details Modal */}
+            <OrderDetailsModal
+                isOpen={!!selectedOrderForDetails}
+                onClose={() => setSelectedOrderForDetails(null)}
+                order={selectedOrderForDetails}
+                onOrderUpdated={(updated) => {
+                    setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
+                    setSelectedOrderForDetails(updated);
+                }}
+                onOrderDeleted={(deletedId) => {
+                    setOrders(prev => prev.filter(o => o.id !== deletedId));
+                    setSelectedOrderForDetails(null);
+                }}
+            />
         </div>
     );
 }

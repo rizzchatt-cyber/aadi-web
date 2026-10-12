@@ -30,8 +30,8 @@ export const LazyImage = React.forwardRef<HTMLImageElement, LazyImageProps>(({
     }
   };
 
-  const getOptimizedSrc = (url: string) => {
-    if (!url) return '';
+  const getOptimizedSrc = (url: any) => {
+    if (!url || typeof url !== 'string') return '';
     if (url.startsWith('data:')) return url; // Don't proxy data URIs
 
     let absoluteUrl = url;

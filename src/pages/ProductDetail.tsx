@@ -37,6 +37,7 @@ export default function ProductDetail() {
     const [isZoomed, setIsZoomed] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isFragranceModalOpen, setIsFragranceModalOpen] = useState(false);
+    const [fragranceModalAction, setFragranceModalAction] = useState<'checkout' | 'cart'>('checkout');
     const [selectedVariant, setSelectedVariant] = useState<SelectedFragranceVariant | null>(null);
     const [isShippingOpen, setIsShippingOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,36 +125,64 @@ export default function ProductDetail() {
         };
     }, [product]);
 
-    const handleAddToCart = async () => {
+    const saveCartItem = async (variant?: SelectedFragranceVariant | null) => {
         if (!product) return;
+
+        const cartTitle = variant 
+            ? `${product.title} (${variant.type} • ${variant.size})`
+            : product.title;
+        const cartPrice = variant 
+            ? variant.price 
+            : (product.priceOnRequest ? 'On Request' : product.price);
 
         if (user) {
             try {
-                // Save to Firestore
                 await addDoc(collection(db, "carts"), {
                     userId: user.uid,
                     userEmail: user.email,
                     productId: id,
-                    productTitle: product.title,
-                    price: product.priceOnRequest ? 'On Request' : product.price,
+                    productTitle: cartTitle,
+                    price: cartPrice,
                     imageUrl: product.images?.[0] || '',
+                    type: variant ? variant.type : null,
+                    size: variant ? variant.size : null,
+                    sizeLabel: variant ? variant.sizeLabel : null,
+                    selectedVariant: variant || null,
                     status: 'active',
                     createdAt: new Date().toISOString()
                 });
-                alert("Successfully added to cart!");
+                alert(`Successfully added ${cartTitle} to cart!`);
             } catch (err) {
                 console.error("Error adding to cart:", err);
                 alert("Could not add to cart. Please try again.");
             }
         } else {
-            // Redirect to login page to "save" their cart intention
-            navigate('/login', { state: { returnTo: `/product/${id}`, action: 'add_to_cart', product: product } });
+            navigate('/login', { 
+                state: { 
+                    returnTo: `/product/${id}`, 
+                    action: 'add_to_cart', 
+                    product: { ...product, title: cartTitle, price: cartPrice, selectedVariant: variant } 
+                } 
+            });
         }
+    };
+
+    const handleAddToCart = async () => {
+        if (!product) return;
+
+        if (isFragranceProduct(product)) {
+            setFragranceModalAction('cart');
+            setIsFragranceModalOpen(true);
+            return;
+        }
+
+        await saveCartItem();
     };
 
     const fragrancePricing = getFragrancePricing(product);
 
     const handleShopNow = () => {
+        setFragranceModalAction('checkout');
         if (isFragranceProduct(product)) {
             setIsFragranceModalOpen(true);
         } else {
@@ -164,7 +193,11 @@ export default function ProductDetail() {
     const handleProceedFromFragranceModal = (variant: SelectedFragranceVariant) => {
         setSelectedVariant(variant);
         setIsFragranceModalOpen(false);
-        setIsShippingOpen(true);
+        if (fragranceModalAction === 'cart') {
+            saveCartItem(variant);
+        } else {
+            setIsShippingOpen(true);
+        }
     };
 
     const handleShippingSubmit = async (addressData: AddressData) => {
@@ -200,7 +233,11 @@ export default function ProductDetail() {
                             productTitle: itemTitle,
                             price: finalPrice,
                             imageUrl: product.images?.[0] || '',
-                            quantity: 1
+                            quantity: 1,
+                            type: selectedVariant ? selectedVariant.type : null,
+                            size: selectedVariant ? selectedVariant.size : null,
+                            sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+                            selectedVariant: selectedVariant || null
                         }
                     ],
                     totalAmount: finalPrice,
@@ -232,7 +269,11 @@ export default function ProductDetail() {
                             productTitle: itemTitle,
                             price: finalPrice,
                             imageUrl: product.images?.[0] || '',
-                            quantity: 1
+                            quantity: 1,
+                            type: selectedVariant ? selectedVariant.type : null,
+                            size: selectedVariant ? selectedVariant.size : null,
+                            sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+                            selectedVariant: selectedVariant || null
                         }
                     ],
                     totalAmount: finalPrice,
@@ -270,7 +311,11 @@ export default function ProductDetail() {
                                     productTitle: itemTitle,
                                     price: finalPrice,
                                     imageUrl: product.images?.[0] || '',
-                                    quantity: 1
+                                    quantity: 1,
+                                    type: selectedVariant ? selectedVariant.type : null,
+                                    size: selectedVariant ? selectedVariant.size : null,
+                                    sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+                                    selectedVariant: selectedVariant || null
                                 }
                             ],
                             totalAmount: finalPrice,

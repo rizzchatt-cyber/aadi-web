@@ -115,7 +115,11 @@ export default function Home() {
               productTitle: itemTitle,
               price: finalPrice,
               imageUrl: selectedProduct.images?.[0] || '',
-              quantity: 1
+              quantity: 1,
+              type: selectedVariant ? selectedVariant.type : null,
+              size: selectedVariant ? selectedVariant.size : null,
+              sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+              selectedVariant: selectedVariant || null
             }
           ],
           totalAmount: finalPrice,
@@ -153,7 +157,11 @@ export default function Home() {
                   productTitle: itemTitle,
                   price: finalPrice,
                   imageUrl: selectedProduct.images?.[0] || '',
-                  quantity: 1
+                  quantity: 1,
+                  type: selectedVariant ? selectedVariant.type : null,
+                  size: selectedVariant ? selectedVariant.size : null,
+                  sizeLabel: selectedVariant ? selectedVariant.sizeLabel : null,
+                  selectedVariant: selectedVariant || null
                 }
               ],
               totalAmount: finalPrice,
