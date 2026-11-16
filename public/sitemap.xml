@@ -5,37 +5,37 @@
   <!-- Static Main Routes -->
   <url>
     <loc>https://aadityasaura.com</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/collections</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/about</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/gallery</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/contact</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://aadityasaura.com/login</loc>
-    <lastmod>2026-10-10</lastmod>
+    <lastmod>2026-11-16</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -178,6 +178,17 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/300oQmMmjC7FSyZSKn3Y</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1Ys1QNvU1zIKDobubesUkk_pRFjq-SVTP=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Shyam Darbar Sacred Divine Fragrance</image:title>
+      <image:caption>Surrender to divine peace and bhakti with Aaditya&apos;s Aura Shyam Darbar — an ethereal sacred attar and fragrance inspired by the sanctum sanctorum of Khatu Shyam </image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/32NTwXxVnjie8qPOWOiD</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -243,6 +254,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1IpilteqNRzbHHSehNMbBttE4eu6uyYZS=w1000</image:loc>
       <image:title>Vintage Royal Twisted Kada</image:title>
       <image:caption>Double-gold strands intricately twisted into a single masterpiece of heritage design and durability. A classic silhouette reimagined for the modern era.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/4AJhCRjuZV9JWvuVpntK</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/10CIY_JtSY9Eg43wcTFhwuo0Z1ipyPp8u=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Vanilla Ice Musk Luxury Fragrance</image:title>
+      <image:caption>Experience the sublime thrill of contrasts with Aaditya&apos;s Aura Vanilla Ice Musk. Blending creamy, warm Bourbon vanilla with frosted glacial crystals and velvety</image:caption>
     </image:image>
   </url>
   <url>
@@ -570,6 +592,28 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1lpRinG8Mw83SF8hhJxh8DRdVQVrVUU90=w1000</image:loc>
       <image:title>Golden Sunflower Pendant Chain</image:title>
       <image:caption>Adorn your neckline with the celestial glow of pure gold, highlighted by a gorgeously detailed sunflower pendant.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/BFSpohcscYBjNvcfEVqj</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1iNovTauWm2g1Z3NVjHb1eMTbrN55BvwZ=w1000</image:loc>
+      <image:title>Pure Silver Embossed Mata Lakshmi Grand Ivory Frame</image:title>
+      <image:caption>Invite boundless wealth, fortune, and divine grace into your abode with the Pure Silver Embossed Mata Lakshmi Grand Ivory Frame. Featuring Mata Lakshmi seated u</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/BXgwWgfRmJR0mVub1TFF</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/17rbmk9dAeFiwp2aufZ7EG_3VtFlqY1-B=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Kapoor (Pure Camphor) Refreshing Fragrance</image:title>
+      <image:caption>Purify your aura and awaken your senses with Aaditya&apos;s Aura Kapoor (Pure Camphor). Infused with the sacred essence of natural Bhimseni Kapoor, this fragrance de</image:caption>
     </image:image>
   </url>
   <url>
@@ -975,6 +1019,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/18Tkku536-AtYjFHnjfmv9LLNiZ-0IkKq=w1000</image:loc>
       <image:title>Graceful Silver Pearl Accented Chain</image:title>
       <image:caption>Featuring delicate silver links accented with lustrous pearls, this chain radiates grace and classical beauty. A perfect accessory for special occasions.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/FnDTn4FcL8HJRgFCLkss</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/14YGE3mvbrzXLO9nn0zsucJgX9B4qtQxK=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Ferrari Black Bold Racing Fragrance</image:title>
+      <image:caption>Unleash pure adrenaline with Aaditya&apos;s Aura Ferrari Black — a bold, dark, and masculine masterpiece that embodies the exhilaration of high-speed racing. Crisp I</image:caption>
     </image:image>
   </url>
   <url>
@@ -1514,6 +1569,17 @@ Inspired by Weekend by Burberry.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/PjHEpgtQTTGT1FWGsXZR</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1N2dWqwEAcJtiHyglZOhAknWV3Fu8b-li=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Benz Club Luxury Men&apos;s Fragrance</image:title>
+      <image:caption>Command respect with Aaditya&apos;s Aura Benz Club — an exhilarating, sophisticated fragrance inspired by peak automotive luxury and masculine prestige. Built with r</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/Pk9kRbOzY2XZWKiyqrWw</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -1773,6 +1839,17 @@ Inspired by Weekend by Burberry.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1LY3xvzyA31U3yLM9x2RYz1MLyji_N0VQ=w1000</image:loc>
       <image:title>Floral Motif Gold Ring</image:title>
       <image:caption>A delicate women&apos;s ring featuring intricate floral patterns, bringing a touch of nature&apos;s beauty to your hands.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/TgiZMdYpFFhyx1bkkHZn</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/12zH68sjuNIY0w9T1yCzLAp-bdjWjKaM8=w1000</image:loc>
+      <image:title>Pure Silver Embossed Lord Ganesha Ivory Mosaic Frame</image:title>
+      <image:caption>Begin every new endeavor with divine grace and supreme luck with the Pure Silver Embossed Lord Ganesha Ivory Mosaic Frame. Exquisitely embossed in fine pure sil</image:caption>
     </image:image>
   </url>
   <url>
@@ -2058,6 +2135,17 @@ Inspired by Coco Chanel.</image:caption>
 
 ✨ Price Starting Options:
 • At</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/XYgN7fsIZJT7Rew8fAf2</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1V7b2T6sZ-91g3vk5qCeZRhdIW6hJkXnm=w1000</image:loc>
+      <image:title>Pure Silver Embossed Lakshmi Ganesh Sacred Frame</image:title>
+      <image:caption>Welcome eternal prosperity, good fortune, and auspicious beginnings with the Pure Silver Embossed Lakshmi Ganesh Sacred Frame. Intricately pressed in fine pure </image:caption>
     </image:image>
   </url>
   <url>
@@ -2360,6 +2448,39 @@ Aura: Step into effortless elegance with Aura — a signature scent that defines
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/btWrFFD0wHddo4JyGtB7</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1UsxLjZ-Um9zVYoP02AT9FVUUJDKntd7n=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Mango Skin Luxury Fragrance</image:title>
+      <image:caption>Immerse yourself in sunshine with Aaditya&apos;s Aura Mango Skin — a vibrant, mouthwatering blend capturing the sweet, luscious essence of sun-ripened tropical mango</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/cAPO6jkQgqsSm3Hy1DIa</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1jvIXvnjzUkaSw0AtVjhNCD470vTEAN4_=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura 212 VIP Exclusive Party Fragrance</image:title>
+      <image:caption>Own the night with Aaditya&apos;s Aura 212 VIP — a pulsating, glamorous fragrance inspired by rooftop nightlife and exclusive VIP guestlists. Blending intoxicating p</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/cCfq76ZGMR1MmWapwqgt</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1DYlibmKasv1x33juLZdzkz8zVubKhDus=w1000</image:loc>
+      <image:title>24K Fine Gold Embossed Maa Durga Devotional Frame</image:title>
+      <image:caption>Invoke divine courage, strength, and supreme protection with the 24K Fine Gold Embossed Maa Durga Devotional Frame. Masterfully crafted with pure 24K gold foil </image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/cG1B5LxJESkrm80U2xNS</loc>
     <lastmod>2026-06-10</lastmod>
     <changefreq>weekly</changefreq>
@@ -2368,6 +2489,17 @@ Aura: Step into effortless elegance with Aura — a signature scent that defines
       <image:loc>https://lh3.googleusercontent.com/d/1qVT7L2p0H5yI5UdVUrjwzvlxqjHge531=w1000</image:loc>
       <image:title>Zenith Minimalist Solid Kada</image:title>
       <image:caption>The ultimate in refined luxury—a solid, unadorned gold band that speaks volumes through pure quality. A timeless addition to any luxury collection.</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/cGiNiHRMihPfRMpyk7P3</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/16d6WnKSpCwTEh1epuHctGnBDIjZ6Oojg=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Dove Clean &amp; Fresh Luxury Fragrance</image:title>
+      <image:caption>Step out with that unbeatable &quot;just stepped out of the shower&quot; freshness all day long with Aaditya&apos;s Aura Dove. Inspired by classic luxury beauty bars, this soo</image:caption>
     </image:image>
   </url>
   <url>
@@ -2967,6 +3099,17 @@ Inspired by Acqua di Gio.</image:caption>
     </image:image>
   </url>
   <url>
+    <loc>https://aadityasaura.com/product/m3X4t6cq4QhGHCcrHha7</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1SDI-4P7jC9UzgaHiPBv9L13JVtm8JjKT=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Dairy Milk Sweet Chocolate Fragrance</image:title>
+      <image:caption>Indulge in sweet luxury with Aaditya&apos;s Aura Dairy Milk — a rich, velvety chocolate fragrance that melts on your skin like the finest confection. Infused with ro</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://aadityasaura.com/product/mMyFxHMloyeDz92rB4c1</loc>
     <lastmod>2026-09-14</lastmod>
     <changefreq>weekly</changefreq>
@@ -3259,6 +3402,17 @@ Inspired by Coco Chanel.</image:caption>
       <image:loc>https://lh3.googleusercontent.com/d/1NW5-_Cl6cigk8fAwbksbR5g75SgRtDed=w1000</image:loc>
       <image:title>Aaditya&apos;s Aura Stronger With You Intensely</image:title>
       <image:caption>Burning Passion · Unstoppable Attraction. Warm chestnut, cinnamon, and fiery gourmand sweetness. Available as 12 ml concentrated Attar and 50-60 ml Eau De Parfu</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/qjmamPw10Myl84NYO08Q</loc>
+    <lastmod>2026-11-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1m0NaExTAa8qzQsjZHZ7xysOaPQxIQPZY=w1000</image:loc>
+      <image:title>Aaditya&apos;s Aura Garlic Prank Novelty Fragrance</image:title>
+      <image:caption>Get ready for laughs, shock, and unforgettable reactions with Aaditya&apos;s Aura Garlic Prank — the ultimate hyper-realistic prank scent! Specially formulated for f</image:caption>
     </image:image>
   </url>
   <url>
@@ -3726,6 +3880,17 @@ Inspired by Bombshell Victoria’s Secret.</image:caption>
       <image:caption>Smooth as silk and deeply sensual. Silk Musk is a soft, powdery fragrance that lingers beautifully on the skin, offering a subtle yet captivating charm.
 
 ✨ Pric</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://aadityasaura.com/product/xhyuoIkBC81bhXnccspf</loc>
+    <lastmod>2026-10-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://lh3.googleusercontent.com/d/1CrYCNYLYO3Hqk0yGOMhnThWEwKFYToCz=w1000</image:loc>
+      <image:title>Dual-Tone Gold &amp; Silver Radha Krishna Divine Frame</image:title>
+      <image:caption>Celebrate the eternal divine love and serenity of Shri Radha Krishna with this Dual-Tone Gold &amp; Silver Radha Krishna Divine Frame. Masterfully crafted with reli</image:caption>
     </image:image>
   </url>
   <url>

@@ -25,6 +25,8 @@ import FragranceSelectionModal, { SelectedFragranceVariant } from '../components
 import { shareProductDirectly } from '../utils/shareUtils';
 import { checkoutWithRazorpay } from '../utils/razorpay';
 import { isFragranceProduct, getFragrancePricing } from '../utils/fragranceHelpers';
+import aaPhoto from '../assets/aa.jpeg';
+import aaThumb from '../assets/aa_thumb.jpeg';
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -372,7 +374,7 @@ export default function ProductDetail() {
     }
 
     return (
-        <div className="min-h-[100dvh] bg-luxury-white pt-24 pb-12">
+        <div className="min-h-[100dvh] bg-luxury-white pt-24 pb-44 lg:pb-16">
             <div className="max-w-7xl mx-auto px-4 md:px-8">
                 {/* Back Button */}
                 <button
@@ -516,6 +518,81 @@ export default function ProductDetail() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Action Buttons directly down of Title & Price (Desktop Only - on phones it's fixed down at the bottom) */}
+                            <div className="hidden lg:flex flex-row items-center gap-3 mt-6 mb-8 w-full">
+                                {!product.priceOnRequest && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={handleShopNow}
+                                        className="py-4 px-8 gold-gradient text-white font-bold rounded-2xl shadow-xl shadow-gold/25 flex items-center justify-center gap-2 transition-all shimmer relative overflow-hidden text-sm uppercase tracking-wider cursor-pointer flex-1"
+                                    >
+                                        Shop Now
+                                    </motion.button>
+                                )}
+
+                                {/* Consult with Aaditya Soni */}
+                                <motion.a
+                                    whileHover={{ scale: 1.01 }}
+                                    whileTap={{ scale: 0.99 }}
+                                    href={getWhatsAppLink()}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="bg-white border-2 border-gold/30 hover:border-gold rounded-2xl px-4 py-3 shadow-md hover:shadow-lg flex items-center justify-between gap-3 transition-all cursor-pointer group flex-1"
+                                >
+                                    <div className="flex items-center gap-2.5 min-w-0">
+                                        <div className="relative shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-luxury-cream border-2 border-gold/40 overflow-hidden relative flex items-center justify-center shadow-xs group-hover:border-gold transition-colors">
+                                                <img
+                                                    src={aaPhoto}
+                                                    alt="Aaditya Soni"
+                                                    loading="eager"
+                                                    className="w-full h-full object-cover object-[50%_18%]"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = aaThumb;
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] border border-white rounded-full shadow-xs" />
+                                        </div>
+                                        <div className="flex flex-col min-w-0 text-left">
+                                            <span className="text-[9px] uppercase tracking-wider font-bold text-gold leading-none mb-0.5">
+                                                Consult with
+                                            </span>
+                                            <div className="flex items-center gap-1">
+                                                <span className="font-serif font-bold text-charcoal text-sm tracking-tight truncate group-hover:text-gold transition-colors">
+                                                    Aaditya Soni
+                                                </span>
+                                                {/* Blue Verified Checkmark */}
+                                                <span className="inline-flex items-center justify-center shrink-0" title="Verified">
+                                                    <svg viewBox="0 0 22 22" className="w-4 h-4 shrink-0" fill="none">
+                                                        <path
+                                                            d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816z"
+                                                            fill="#2ea5ff"
+                                                        />
+                                                        <path
+                                                            d="M9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                                                            fill="#ffffff"
+                                                        />
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                            <span className="text-xs text-charcoal/60 font-mono font-medium tracking-wider truncate">
+                                                +91 86535 35303
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-xs transition-all">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="shrink-0">
+                                            <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.101-.477-.15-.678.15-.201.3-.778.98-.954 1.18-.176.2-.352.225-.653.075-.301-.15-1.272-.469-2.423-1.496-.896-.799-1.501-1.787-1.677-2.088-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.201-.301.301-.502.101-.201.05-.377-.025-.527-.075-.15-.678-1.633-.929-2.235-.245-.586-.494-.507-.678-.516-.176-.008-.377-.01-.578-.01-.201 0-.527.075-.803.377-.276.301-1.054 1.03-1.054 2.512 0 1.482 1.079 2.913 1.23 3.114.15.201 2.124 3.243 5.145 4.549.719.311 1.28.497 1.718.636.722.229 1.379.197 1.898.12.578-.087 1.78-.727 2.031-1.43.251-.703.251-1.305.176-1.43-.075-.126-.276-.201-.577-.351z"/>
+                                            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.183L2 22l4.957-1.402C8.423 21.498 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18.2c-1.628 0-3.14-.473-4.417-1.288l-.317-.201-3.267.923.945-3.18-.21-.334A8.156 8.156 0 0 1 3.8 12c0-4.521 3.679-8.2 8.2-8.2s8.2 3.679 8.2 8.2-3.679 8.2-8.2 8.2z"/>
+                                        </svg>
+                                        <span>WhatsApp</span>
+                                    </div>
+                                </motion.a>
+                            </div>
                         </div>
 
                         {/* Highlights */}
@@ -593,54 +670,88 @@ export default function ProductDetail() {
                                 </button>
                             )}
                         </div>
+                    </div>
+                </div>
+            </div>
 
-                        {/* Actions */}
-                        <div className="flex flex-col gap-4 mt-auto">
-                            {!product.priceOnRequest && (
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleShopNow}
-                                    className="w-full py-5 gold-gradient text-white font-bold rounded-2xl shadow-xl shadow-gold/30 flex items-center justify-center gap-3 transition-all shimmer relative overflow-hidden text-lg cursor-pointer"
-                                >
-                                    Shop Now
-                                </motion.button>
-                            )}
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <motion.a
-                                    whileHover={{ scale: 1.02, backgroundColor: '#128C7E' }}
-                                    whileTap={{ scale: 0.98 }}
-                                    href={getWhatsAppLink()}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-grow py-5 bg-[#25D366] text-white font-bold rounded-2xl shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 transition-all"
-                                >
-                                    <MessageCircle size={24} />
-                                    Order on WhatsApp
-                                </motion.a>
-                                <motion.button
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={handleAddToCart}
-                                    className="flex-grow py-5 bg-charcoal text-white font-bold rounded-2xl shadow-xl shadow-charcoal/10 flex items-center justify-center gap-3 relative overflow-hidden group border border-gold/10 hover:bg-charcoal/90 transition-colors cursor-pointer"
-                                >
-                                    <ShoppingCart size={24} />
-                                    Add to Cart
-                                </motion.button>
-                                <motion.button
-                                    whileHover={{ scale: 1.03 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={() => shareProductDirectly(product)}
-                                    className="py-5 px-6 bg-luxury-cream border-2 border-gold/30 hover:border-gold text-charcoal font-bold rounded-2xl shadow-md flex items-center justify-center gap-2 hover:bg-gold/10 transition-all cursor-pointer"
-                                    title="Share Masterpiece"
-                                    aria-label="Share Masterpiece"
-                                >
-                                    <Share2 size={22} className="text-gold" />
-                                    <span className="sm:hidden text-sm">Share</span>
-                                </motion.button>
+            {/* Mobile Fixed Down Bottom Bar (Only visible on mobile/tablets, hidden on desktop) */}
+            <div
+                className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t-2 border-gold/40 shadow-[0_-10px_30px_rgba(191,149,63,0.2),0_-2px_10px_rgba(0,0,0,0.06)] px-3 py-2.5 sm:px-6 sm:py-3"
+                style={{ paddingBottom: 'max(0.6rem, env(safe-area-inset-bottom, 0.6rem))' }}
+            >
+                <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+                    {/* Shop Now Button */}
+                    {!product.priceOnRequest && (
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={handleShopNow}
+                            className="w-full sm:flex-1 py-3 sm:py-3.5 gold-gradient text-white font-bold rounded-xl sm:rounded-2xl shadow-md shadow-gold/30 flex items-center justify-center gap-2 transition-all shimmer relative overflow-hidden text-sm sm:text-base uppercase tracking-wider cursor-pointer shrink-0"
+                        >
+                            Shop Now
+                        </motion.button>
+                    )}
+
+                    {/* Aaditya Soni WhatsApp Consult Card */}
+                    <motion.a
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        href={getWhatsAppLink()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full sm:flex-1 bg-luxury-cream/80 hover:bg-luxury-cream border border-gold/40 hover:border-gold rounded-xl sm:rounded-2xl px-3 py-2 sm:py-2.5 shadow-xs flex items-center justify-between gap-2.5 transition-all cursor-pointer group shrink-0"
+                    >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="relative shrink-0">
+                                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-gold/40 overflow-hidden relative flex items-center justify-center shadow-xs group-hover:border-gold transition-colors">
+                                    <img
+                                        src={aaPhoto}
+                                        alt="Aaditya soni"
+                                        loading="eager"
+                                        className="w-full h-full object-cover object-[50%_18%]"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).src = aaThumb;
+                                        }}
+                                    />
+                                </div>
+                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#25D366] border border-white rounded-full shadow-xs" />
+                            </div>
+                            <div className="flex flex-col min-w-0 text-left">
+                                <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-bold text-gold leading-none mb-0.5">
+                                    Consult with
+                                </span>
+                                <div className="flex items-center gap-1">
+                                    <span className="font-serif font-bold text-charcoal text-xs sm:text-sm tracking-tight truncate group-hover:text-gold transition-colors">
+                                        Aaditya Soni
+                                    </span>
+                                    {/* Blue Verified Checkmark */}
+                                    <span className="inline-flex items-center justify-center shrink-0" title="Verified">
+                                        <svg viewBox="0 0 22 22" className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" fill="none">
+                                            <path
+                                                d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816z"
+                                                fill="#2ea5ff"
+                                            />
+                                            <path
+                                                d="M9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+                                                fill="#ffffff"
+                                            />
+                                        </svg>
+                                    </span>
+                                </div>
+                                <span className="text-[10px] sm:text-xs text-charcoal/60 font-mono font-medium tracking-wider truncate">
+                                    +91 86535 35303
+                                </span>
                             </div>
                         </div>
-                    </div>
+
+                        <div className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-[#25D366] hover:bg-[#20ba5a] active:scale-95 text-white font-semibold text-xs sm:text-sm rounded-lg sm:rounded-xl shadow-xs transition-all">
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" className="shrink-0">
+                                <path d="M17.472 14.382c-.301-.15-1.78-.879-2.056-.98-.276-.101-.477-.15-.678.15-.201.3-.778.98-.954 1.18-.176.2-.352.225-.653.075-.301-.15-1.272-.469-2.423-1.496-.896-.799-1.501-1.787-1.677-2.088-.176-.301-.019-.464.132-.614.136-.135.301-.351.452-.527.15-.176.201-.301.301-.502.101-.201.05-.377-.025-.527-.075-.15-.678-1.633-.929-2.235-.245-.586-.494-.507-.678-.516-.176-.008-.377-.01-.578-.01-.201 0-.527.075-.803.377-.276.301-1.054 1.03-1.054 2.512 0 1.482 1.079 2.913 1.23 3.114.15.201 2.124 3.243 5.145 4.549.719.311 1.28.497 1.718.636.722.229 1.379.197 1.898.12.578-.087 1.78-.727 2.031-1.43.251-.703.251-1.305.176-1.43-.075-.126-.276-.201-.577-.351z"/>
+                                <path d="M12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.435 5.183L2 22l4.957-1.402C8.423 21.498 10.151 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18.2c-1.628 0-3.14-.473-4.417-1.288l-.317-.201-3.267.923.945-3.18-.21-.334A8.156 8.156 0 0 1 3.8 12c0-4.521 3.679-8.2 8.2-8.2s8.2 3.679 8.2 8.2-3.679 8.2-8.2 8.2z"/>
+                            </svg>
+                            <span>WhatsApp</span>
+                        </div>
+                    </motion.a>
                 </div>
             </div>
 

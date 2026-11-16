@@ -105,7 +105,7 @@ function AppContent() {
         {isHome && <SocialBubbles />}
 
         {/* Mobile-Only WhatsApp Bottom Popup Bar */}
-        {!isAdmin && <WhatsAppBottomPopup />}
+        {!isAdmin && !location.pathname.startsWith('/product/') && <WhatsAppBottomPopup />}
       </div>
     </div>
   );

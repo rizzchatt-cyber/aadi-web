@@ -116,7 +116,7 @@ export default function Hero({ tagline, bgBanners }: { tagline?: string; image?:
             whileTap={{ scale: 0.97 }}
             className="px-12 py-5 gold-gradient text-white font-bold rounded-full shadow-luxury text-xs uppercase tracking-[0.3em] shimmer relative overflow-hidden mb-12"
           >
-            Explore Aura
+            EXPLORE PRODUCTS
           </motion.button>
 
           {/* Experience Section Details */}
